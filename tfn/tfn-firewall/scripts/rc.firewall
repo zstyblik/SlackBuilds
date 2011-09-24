@@ -1,0 +1,45 @@
+#!/bin/bash
+# 2010/Jul/12 @ Zdenek Styblik
+# Desc: rc.firewall; call rc.firewall-local & rc.firewall-lan
+#
+
+iptables=/usr/sbin/iptables
+
+help() {
+	echo
+	echo "Calls rc.firewall-local and rc.firewall-lan"
+	echo "Actions: start | stop | restart"
+	echo
+	return 0
+}
+
+start() {
+	if [ -x /etc/rc.d/rc.firewall-local ]; then
+		echo 
+		echo -n "rc.firewall-local..."
+		/etc/rc.d/rc.firewall-local start && echo "done" || echo "failed"
+	fi
+	if [ -x /etc/rc.d/rc.firewall-lan ]; then
+		echo 
+		echo -n "rc.firewall-lan..."
+		/etc/rc.d/rc.firewall-lan start && echo "done" || echo "failed"
+	fi
+	return 0
+}
+
+stop() {
+	$iptables -F
+	$iptables -t nat -F
+	$iptables -t mangle -F
+
+	$iptables -P INPUT ACCEPT
+	$iptables -P FORWARD ACCEPT
+	$iptables -P OUTPUT ACCEPT
+}
+
+case "$1" in
+	start) start ;;
+	stop) stop ;;
+	restart) stop; start ;;
+	*) help; exit 254 ;;
+esac

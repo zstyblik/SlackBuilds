@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+         |-----handy-ruler------------------------------------------------------|
+areca-cli: ARECA SATA RAID Controller CLI
+areca-cli: 
+areca-cli: This package is CLI for ARECA SATA RAID CONTROLLERs
+areca-cli: 
+areca-cli: Supported controllers are:
+areca-cli:   * ARC1110/1120/1130/1160/1170/1210/1220/1230/1260
+areca-cli: 
+areca-cli: 
+areca-cli: 
+areca-cli: 
+areca-cli: 

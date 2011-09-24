@@ -1,0 +1,41 @@
+--- netcat.c	2010-08-19 14:55:36.803276564 -0200
++++ netcat.c	2010-08-18 08:13:17.755112464 -0200
+@@ -817,7 +817,7 @@
+ 	char *n, *endp;
+ 	int hi, lo, cp;
+ 	int x = 0;
+-
++	
+ 	sv = getservbyname(p, uflag ? "udp" : "tcp");
+ 	if (sv) {
+ 		portlist[0] = calloc(1, PORT_MAX_LEN);
+@@ -844,9 +844,6 @@
+ 			hi = lo;
+ 			lo = cp;
+ 		}
+-		else if (pfd[0].revents & POLLERR)
+-			if (write(nfd, "", 1) == -1)
+-			    warn("Write error");
+ 
+ 		/* Load ports sequentially. */
+ 		for (cp = lo; cp <= hi; cp++) {
+@@ -957,7 +954,7 @@
+ void
+ help(void)
+ {
+-	fprintf(stderr, "OpenBSD netcat (Debian patchlevel " DEBIAN_VERSION ")\n");
++	fprintf(stderr, "OpenBSD netcat (Debian patchlevel)\n");
+ 	usage(0);
+ 	fprintf(stderr, "\tCommand Summary:\n\
+ 	\t-4		Use IPv4\n\
+@@ -994,8 +991,8 @@
+ void
+ usage(int ret)
+ {
+-	fprintf(stderr, "usage: nc [-46DdhklnrStUuvzC] [-i interval] [-P proxy_username] [-p source_port]\n");
+-	fprintf(stderr, "\t  [-s source_ip_address] [-T ToS] [-w timeout] [-X proxy_protocol]\n");
++	fprintf(stderr, "usage: nc [-46DdhklnrStUuvzC] [-i interval] [-q timeout] [-P proxy_username] \n");
++	fprintf(stderr, "\t [-p source_port] [-s source_ip_address] [-T ToS] [-w timeout] [-X proxy_protocol]\n");
+ 	fprintf(stderr, "\t  [-x proxy_address[:port]] [hostname] [port[s]]\n");
+ 	if (ret)
+ 		exit(1);

@@ -1,0 +1,1 @@
+cat $CWD/util-linux-ng-2.18-20100706.diff | patch -p1 || exit 1

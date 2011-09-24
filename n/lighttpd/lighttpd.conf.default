@@ -1,0 +1,45 @@
+#	lighttpd default/example config
+# Config variables
+var.log_root = "/var/log/lighttpd"
+var.server_root = "/srv/lighttpd"
+var.state_dir = "/var/run"
+var.home_dir = "/var/lib/lighttpd"
+var.conf_dir = "/etc/lighttpd"
+
+# socket dir for fastcgi and scgi
+var.socket_dir = home_dir + "/sockets"
+
+server.port = 80
+
+#server.use-ipv6 = "enable"
+
+server.username = "lighttpd" 
+server.groupname = "lighttpd" 
+
+server.document-root = "/var/www/htdocs/" 
+
+server.pid-file = state_dir + "/lighttpd.pid"
+
+# Logging
+server.errorlog = log_root + "/error.log"
+
+#include "access_log.conf"
+
+# Tuning/Perf
+
+server.event-handler = "linux-sysepoll"
+server.max-connections = 512
+
+mimetype.assign = (
+  ".html" => "text/html", 
+  ".txt" => "text/plain",
+  ".jpg" => "image/jpeg",
+  ".png" => "image/png" 
+)
+
+static-file.exclude-extensions = ( ".fcgi", ".php", ".rb", "~", ".inc" )
+index-file.names = ( "index.html" )
+
+$HTTP["host"] == "www.domain.tld" {
+  server.document-root = "/var/www/htdocs/" 
+}

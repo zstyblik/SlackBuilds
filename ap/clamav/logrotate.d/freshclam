@@ -1,0 +1,8 @@
+/var/log/freshclam.log {
+  rotate 10
+  daily
+  notifempty
+  size=5M
+  nocompress
+  copytruncate
+}

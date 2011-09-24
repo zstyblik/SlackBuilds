@@ -1,0 +1,67 @@
+#!/bin/bash
+# 2009/Jul/12 @ Zdenek Styblik
+VERSION=0.96.3
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+AUTHOR=""
+TMPDIR='/tmp/'
+PKG="$TMPDIR/clamav-install/"
+CWD=$(pwd)
+#
+NUMJOBS=${NUMJOBS:-" -j7 "}
+#
+rm -rf $PKG
+mkdir -p $TMP $PKG
+
+if [ "$ARCH" = "i486" ]; then
+	SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+	LIBDIRSUFFIX=""
+elif [ "$ARCH" = "s390" ]; then
+	SLKCFLAGS="-O2"
+	LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+	SLKCFLAGS="-O2 -fPIC"
+	LIBDIRSUFFIX="64"
+fi
+
+if [ ! -e ./clamav-${VERSION}.tar.gz ]; then
+	echo "Archive clamav-${VERSION}.tar.gz doesn't exist."
+	exit 100;
+fi
+
+cd $TMP
+rm -rf clamav-${VERSION}
+tar -vzxf $CWD/clamav-${VERSION}.tar.gz || exit 1
+
+cd clamav-${VERSION}
+
+FLAGS="$SLKCFLAGS"
+./configure \
+	$* \
+	--prefix=/usr/ \
+	--sysconfdir=/etc/clamav/ \
+	--mandir=/usr/man/ \
+	--libdir=/usr/lib${LIBDIRSUFFIX} \
+	--localstatedir=/var/run/clamav/ \
+	--enable-dependency-tracking \
+	--with-user=amavisd \
+	--with-group=amavisd \
+	--with-dbdir=/var/lib/clamav/ \
+	|| exit 1
+make ${NUMJOBS} || make || exit 2
+make install DESTDIR=${PKG} || exit 3
+cd ${TMPDIR}/clamav-install || exit 4
+
+mv $PKG/etc/clamav/clamd.conf{,.new}
+mv $PKG/etc/clamav/freshclam.conf{,.new}
+
+cp -r $CWD/{cron.daily,logrotate.d} $PKG/etc/
+chown -R root:root $PKG/crontab.daily $PKG/etc/logrotate.d
+
+mkdir ${PKG}/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+makepkg -l y -c n  ${TMPDIR}/clamav-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz
+
+md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+

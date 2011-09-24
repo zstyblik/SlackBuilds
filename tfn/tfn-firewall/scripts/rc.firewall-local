@@ -1,0 +1,19 @@
+#!/bin/sh
+# 2010/Jul/12 @ Zdenek Styblik
+# Desc: local firewall
+#
+iptables=/usr/sbin/iptables
+
+$iptables -F
+$iptables -t nat -F
+#$iptables -X LAN
+#$iptables -N LAN
+
+# input
+#$iptables -A INPUT -j LAN
+#$iptables -A INPUT -j BLOCKED
+
+# forward
+#$iptables -A FORWARD -j LAN
+#$iptables -A FORWARD -j BLOCKED
+

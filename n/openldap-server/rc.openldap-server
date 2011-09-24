@@ -1,0 +1,68 @@
+#!/bin/bash
+# 2009/06/05 @ Zdenek Styblik
+# Note: this script can't handle more than one # slapd; !
+PIDFILE='/var/run/slapd.pid'
+LISTENAT=''
+
+ldap_start() 
+{
+	if [ -a $PIDFILE ]; then
+		echo "It seems OpenLDAP is already running."
+		return 2
+	fi
+	if [ -x /usr/libexec/slapd ]; then
+		echo -n "Starting OpenLDAP: "
+    /usr/libexec/slapd -h ${LISTENAT}
+		RETVAL=$?
+	  if [ $RETVAL != 0 ]; then
+		  echo "Fail "
+	  else
+		  echo "Ok "
+	  fi
+	fi
+}
+
+ldap_stop()
+{
+	if ps aux | grep -q 'slapd'; then
+		echo -n "Stopping OpenLDAP: "
+		kill `ps aux | grep slapd | grep -v 'grep' | awk '{printf $2}'`
+		echo "Done "
+	fi
+}
+
+ldap_restart()
+{
+	ldap_stop
+	sleep 5
+	ldap_start
+}
+
+ldap_status()
+{
+	if ps aux | grep -q 'slapd'; then
+		echo "OpenLDAP seems to be running"
+		return 0 
+	else
+		echo "OpenLDAP seems to be down"
+		return 1
+	fi
+}
+
+case "$1" in
+'start')
+  ldap_start
+;;
+'stop')
+  ldap_stop
+;;
+'restart')
+  ldap_restart
+;;
+'status')
+  ldap_status
+;;
+*)
+  echo "usage $0 start|stop|restart|status"
+esac
+

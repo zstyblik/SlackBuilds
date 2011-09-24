@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|'
+# on the right side marks the last column you can put a character in.  You must
+# make exactly 11 lines for the formatting to be correct.  It's also
+# customary to leave one space after the ':'.
+
+      |-----handy-ruler------------------------------------------------------|
+clamav: Clam AntiVirus version 0.96 (2010-Apr-02)
+clamav: Clam AntiVirus is an open source (GPL) anti-virus toolkit for UNIX, 
+clamav: designed especially for e-mail scanning on mail gateways. 
+clamav: It provides a number of utilities including a flexible and scalable 
+clamav: multi-threaded daemon, a command line scanner and advanced tool for 
+clamav: automatic database updates. The core of the package is an 
+clamav: anti-virus engine available in a form of shared library.
+clamav:
+clamav:
+clamav:
+clamav:

@@ -1,0 +1,62 @@
+#!/bin/bash
+# 2009/Jul/05 @ Zdenek Styblik
+IP='127.0.0.1'
+FTPPID='/var/run/pure-ftpd/pureftpd.pid'
+AUTHPID='/var/run/pure-ftpd/pure-authd.pid'
+UPSCRIPTPID='/var/run/pure-ftpd/pure-uploadscript.pid'
+SOCK='/var/run/pure-ftpd/ftpd.sock'
+UPSCRIPT='/root/scripts/ftp.uploads/ftp.upload.sh'
+ftp_start()
+{
+### external auth daemon
+	/usr/sbin/pure-authd -s $SOCK \
+	-r /usr/local/sbin/pure-ftpd-auth-ldap.pl \
+	-p $AUTHPID -B
+### ftp server
+	/usr/sbin/pure-ftpd -g $FTPPID -1 \
+	-f none -k 97 -H -B -E -A -Y 2 \
+	-l extauth:$SOCK \
+	-S ${IP},21
+### upload script
+#	/usr/sbin/pure-uploadscript \
+#	-B \
+#	-p $UPSCRIPTPID \
+#	-r $UPSCRIPT
+}
+
+ftp_stop()
+{
+	kill $(cat "${FTPPID}")
+	kill $(cat "${AUTHPID}")
+	kill $(cat "${UPSCRIPTPID}")
+}
+
+ftp_restart()
+{
+	ftp_stop
+	sleep 3
+	ftp_start
+}
+
+ftp_status()
+{
+	echo "bar"
+}
+
+case "${1}" in
+	'start')
+		ftp_start
+		;;
+	'stop')
+		ftp_stop
+		;;
+	'restart')
+		ftp_restart
+		;;
+	'status')
+		ftp_status
+		;;
+	*)
+		echo "usage ${0} start|stop|restart|status"
+		;;
+esac

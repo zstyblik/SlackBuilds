@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+       |-----handy-ruler------------------------------------------------------|
+dovecot: Dovecot (IMAP and POP3 e-mail server)
+dovecot: 
+dovecot: Dovecot is an open source IMAP and POP3 email server for
+dovecot: Linux/UNIX-like systems, written with security primarily in mind.
+dovecot: Dovecot is an excellent choice for both small and large installations.
+dovecot: It's fast, simple to set up, requires no special administration and it
+dovecot: uses very little memory.
+dovecot: 
+dovecot: 
+dovecot: 
+dovecot: 

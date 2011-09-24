@@ -1,0 +1,20 @@
+#!/bin/bash
+CONFIG=/etc/rc.d/rc.firewall-lan.conf
+IPTABLES=/usr/sbin/iptables
+
+set -e
+
+if [ ! -e "${CONFIG}" ]; then
+	echo "File '$CONFIG' doesn't seem to exist."
+	exit 2
+fi
+
+${IPTABLES} -F LAN
+
+for LINE in $(cat "${CONFIG}" | grep -v -e '^#'); do
+	IP=$(echo "${LINE}" | cut -d ';' -f 1)
+	ETH=$(echo "${LINE}" | cut -d ';' -f 2)
+	ACTION=$(echo "${LINE}" | cut -d ';' -f 3)
+	${IPTABLES} -A LAN -s "${IP}" -i "${ETH}" -j "${ACTION}";
+done
+

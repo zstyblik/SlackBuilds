@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+        |-----handy-ruler------------------------------------------------------|
+ipmitool: IPMI tool (Intelligent Platform Management Interface Tool)
+ipmitool: 
+ipmitool: IPMItool is a utility for managing and configuring devices that
+ipmitool: support the Intelligent Platform Management Interface (IPMI) 
+ipmitool: version 1.5 and version 2.0 specifications.
+ipmitool: 
+ipmitool: The ipmitool program provides a simple command-line interface to this
+ipmitool: BMC. It features the ability to read the sensor data repository (SDR)
+ipmitool: and print sensor values, display the contents of the System Event Log
+ipmitool: (SEL), print Field Replaceable Unit (FRU) inventory information, read
+ipmitool: and set LAN configuration, and perform remote power control. 

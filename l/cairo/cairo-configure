@@ -1,0 +1,13 @@
+#!/bin/bash
+./configure \
+	--prefix=/usr \
+	--libdir=/usr/lib${LIBDIRSUFFIX} \
+	--mandir=/usr/man \
+	--sysconfdir=/etc \
+	--disable-gtk-doc \
+	--disable-glitz \
+	--disable-quartz \
+	--disable-static \
+	--disable-win32 \
+	--without-x \
+	|| exit 1

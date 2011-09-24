@@ -1,0 +1,18 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+    |-----handy-ruler------------------------------------------------------|
+mrtg: MRTG (Multi Router Traffic Grapher)
+mrtg:
+mrtg: You have a router, you want to know what it does all day long? Then 
+mrtg: MRTG is for you. It will monitor SNMP network devices and draw pretty 
+mrtg: pictures showing how much traffic has passed through each interface.
+mrtg: MRTG is being used to graph all sorts of network devices as well as 
+mrtg: everything else from weather data to vending machines.
+mrtg: It is written in perl and works on Unix/Linux as well as Windows and
+mrtg: even Netware systems. MRTG is licensed under 
+mrtg: the GnuGPL.

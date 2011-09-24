@@ -1,0 +1,108 @@
+#!/bin/sh
+
+# Copyright 2008, 2009  Patrick J. Volkerding, Sebeka, Minnesota, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Modified 2010/Apr/14 @ Zdenek Styblik
+# Desc: Slackware's SlackBuild template
+
+VERSION=${VERSION:-2.4.25}
+ARCH=${ARCH:-x86_64}
+NUMJOBS=${NUMJOBS:-" -j7 "}
+BUILD=${BUILD:-1}
+AUTHOR=""
+APPL="openldap-server"
+TRSFX="tgz"
+SLKLDFLAGS=${SLKLDFLAGS:-""}
+
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-$APPL
+
+if [ "$ARCH" = "i486" ]; then
+  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+elif [ "$ARCH" = "s390" ]; then
+  SLKCFLAGS="-O2"
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+
+cd $TMP
+rm -rf $APPL-$VERSION
+tar xvf $CWD/openldap-$VERSION.$TRSFX || exit 1
+cd openldap-$VERSION
+
+if [ "$ARCH" = "x86_64" ]; then
+  sed -i -e "s#/lib#/lib64#" Makefile
+fi
+
+chown -R root:root .
+find . \
+  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+  -exec chmod 755 {} \; -o \
+  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+  -exec chmod 644 {} \;
+
+echo Building ...
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+./configure \
+CPPFLAGS=-D_GNU_SOURCE \
+--prefix=/usr/ \
+--exec-prefix=/usr/ \
+--libdir=/usr/lib${LIBDIRSUFFIX} \
+--sysconfdir=/etc/ \
+--localstatedir=/var/ \
+--mandir=/usr/man/ \
+--without-cyrus-sasl \
+--with-tls
+make $NUMJOBS || make || exit 1
+make install DESTDIR=$PKG
+
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+cat $CWD/doinst.sh > $PKG/install/doinst.sh
+
+mkdir -p $PKG/etc/rc.d/ 2>/dev/null
+cat $CWD/rc.openldap-server > $PKG/etc/rc.d/rc.openldap-server.new
+
+mkdir -p $PKG/etc/logrotate.d/ 2>/dev/null
+cat $CWD/ldap > $PKG/etc/logrotate.d/ldap.new
+
+mv $PKG/etc/openldap/ldap.conf{,.new}
+mv $PKG/etc/openldap/slapd.conf{,.new}
+
+# Build the package:
+cd $PKG
+#mv $PKG/etc/openldap/
+makepkg -c n -l y $TMP/$APPL-$VERSION-$ARCH-${BUILD}${AUTHOR}.txz
+
+md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+

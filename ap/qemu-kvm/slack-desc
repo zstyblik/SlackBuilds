@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+        |-----handy-ruler------------------------------------------------------|
+qemu-kvm: QEMU an open source machine emulator and virtualizer with KVM support
+qemu-kvm: 
+qemu-kvm: When used as a machine emulator, QEMU can run OSes and programs made
+qemu-kvm: for one machine (e.g. an ARM board) on a different machine (e.g. your
+qemu-kvm: own PC). By using dynamic translation, it achieves very good
+qemu-kvm: performance.
+qemu-kvm: 
+qemu-kvm: 
+qemu-kvm: 
+qemu-kvm: 
+qemu-kvm: 

@@ -1,0 +1,36 @@
+#!/bin/sh
+#item   ####description                                      ###on off ###
+TMP=/var/log/setup/tmp
+if [ ! -d $TMP ]; then
+  mkdir -p $TMP
+fi
+cat /dev/null > $TMP/SeTnewtag
+dialog --title "SELECTING PACKAGES FROM SERIES ${CATEGORY} (${CATDESC})" \
+       --checklist "Please confirm the packages you wish to install \
+from series ${CATEGORY}.  Use the UP/DOWN keys to scroll through the list, \
+and the SPACE key to deselect any packages don't want installed.  You \
+are cautioned against unselecting REQUIRED packages.  However, it's \
+your system. :^)  Press ENTER when you are done."  21 76 10 \
+PACKAGE_MENU
+2> $TMP/SeTpkgs
+if [ $? = 1 -o $? = 255 ]; then
+ rm -f $TMP/SeTpkgs
+ > $TMP/SeTnewtag
+ for pkg in \
+PKG_LIST
+  ; do
+  echo "$pkg: SKP" >> $TMP/SeTnewtag
+ done
+ exit
+fi
+cat /dev/null > $TMP/SeTnewtag
+for PACKAGE in \
+PKG_LIST
+ ; do
+ if grep -F \"$PACKAGE\" $TMP/SeTpkgs 1> /dev/null 2> /dev/null ; then
+  echo "$PACKAGE: ADD" >> $TMP/SeTnewtag
+ else
+  echo "$PACKAGE: SKP" >> $TMP/SeTnewtag
+ fi
+done
+rm -f $TMP/SeTpkgs

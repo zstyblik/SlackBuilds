@@ -1,0 +1,9 @@
+/var/log/ldap {
+  rotate 20
+  daily
+  copytruncate
+  notifempty
+  size=5M
+  compress
+  delaycompress
+}

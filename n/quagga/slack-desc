@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+      |-----handy-ruler------------------------------------------------------|
+quagga: Quagga (Routing software suite)
+quagga: 
+quagga: Quagga is a routing software suite, providing implementations of 
+quagga: OSPFv2, OSPFv3, RIP v1 and v2, RIPng and BGP-4 for Unix platforms, 
+quagga: particularly FreeBSD, Linux, Solaris and NetBSD. Quagga is a fork of 
+quagga: GNU Zebra which was developed by Kunihiro Ishiguro. The Quagga tree 
+quagga: aims to build a more involved community around Quagga than 
+quagga: the current centralised model of GNU Zebra. 
+quagga: 
+quagga: 
+quagga: 

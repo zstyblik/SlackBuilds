@@ -1,0 +1,45 @@
+#!/bin/bash
+LIBVIRTDPID=/var/run/libvirtd.pid
+
+function help() {
+        cat <<'EOF'
+libvirtd control script
+rc.libvirtd use: (restart|start|stop)
+EOF
+        return 0
+} # function help
+
+function start() {
+        if [ -e $LIBVIRTDPID ]; then
+                LVPIDOLD=`cat $LIBVIRTDPID`
+                if [ -d /proc/${LVPIDOLD} ]; then
+                        grep -q -e 'libvirtd' /proc/${LVPIDOLD}/status && \
+                        { echo "Libvirtd is running!"; exit 2; }
+                fi;
+        fi
+        /usr/sbin/libvirtd -l -d -p ${LIBVIRTDPID} || \
+        { echo "There seems to be problem with libvirtd."; exit 3; }
+} # function start
+
+function stop() {
+        kill -s 2 `cat $LIBVIRTDPID` && rm -f $LIBVIRTDPID
+} # function stop
+
+case "$1" in
+        start)
+                start
+                break
+                ;;
+        stop)
+                stop
+                break
+                ;;
+        restart)
+                stop && start
+                break
+                ;;
+        *)
+                help
+                break
+                ;;
+esac

@@ -1,0 +1,3 @@
+* doinst.sh - create /var/run/clamav ; create /var/lib/clamav ; chown by amavisd(:amavisd)
+* doinst.sh - touch logs /var/log/clamav.log ;
+* create logrotate.d entry
