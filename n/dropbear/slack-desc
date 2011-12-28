@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+        |-----handy-ruler------------------------------------------------------|
+dropbear: dropbear(SSH server and client)
+dropbear: 
+dropbear: Dropbear is a relatively small SSH 2 server and client. It
+dropbear: runs on a variety of POSIX-based platforms. Dropbear is open source
+dropbear: software, distributed under a MIT-style license. Dropbear is
+dropbear: particularly useful for "embedded"-type Linux (or other Unix)
+dropbear: systems, such as wireless routers.
+dropbear: 
+dropbear: Project page: https://matt.ucc.asn.au/dropbear/
+dropbear: 
+dropbear: 
