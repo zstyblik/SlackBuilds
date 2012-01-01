@@ -19,152 +19,182 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+set -e
+set -u
 
-BUILD=${BUILD:-1}
-
-PKGNAM=git
-VERSION=${VERSION:-$(echo $PKGNAM-*.tar.?z* | cut -d - -f 2 | rev | cut -f 3- -d . | rev)}
+APPL="git"
+VERSION=${VERSION:-$(echo $APPL-*.tar.?z* | cut -d - -f 2 | \
+	rev | cut -f 3- -d . | rev)}
+ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
+BUILD=${BUILD:-1}
+AUTHOR=""
+TRSFX="tar.bz2"
 
-# Automatically determine the architecture we're building on:
-if [ -z "$ARCH" ]; then
-  case "$( uname -m )" in
-    i?86) export ARCH=i486 ;;
-    arm*) export ARCH=arm ;;
-    # Unless $ARCH is already set, use uname -m for all other archs:
-       *) export ARCH=$( uname -m ) ;;
-  esac
-fi
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG="${TMP}/package-${APPL}"
 
 eval $(perl '-V:installvendorlib')
 PERLDIR=$installvendorlib/$ARCH-linux-thread-multi/auto
 
 if ls /var/log/packages/git-* 1> /dev/null 2> /dev/null ; then
-  echo "Git is installed.  The package should be removed before"
-  echo "building, or the new package might be missing some"
-  echo "perl modules."
-  echo
-  echo "You'll be given a short time to consider this."
-  sleep 3600
+	printf "Git is installed.  The package should be removed before\n"
+	printf "building, or the new package might be missing some\n"
+	printf "perl modules.\n\n"
+	printf "You'll be given a short time to consider this.\n"
+	sleep 30
 fi
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
 
-if [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-else
-  SLKCFLAGS="-O2"
-fi
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
 
-CWD=$(pwd)
-TMP=${TMP:-/tmp}
-PKG=$TMP/package-git
-
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS=""
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
 rm -rf $PKG
 mkdir -p $TMP $PKG
 
 cd $TMP
-rm -rf git-$VERSION
-tar xvf $CWD/git-$VERSION.tar.?z* || exit 1
-cd git-$VERSION
+rm -rf $APPL-$VERSION
+tar xvf $CWD/$APPL-$VERSION.tar.?z* || exit 1
+cd $APPL-$VERSION
 
 chown -R root:root .
 find . \
-  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
-  -exec chmod 755 {} \; -o \
-  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
-  -exec chmod 644 {} \;
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
 
 mkdir -p $PKG/usr/doc/git-$VERSION
 cp -a \
-  COPYING* INSTALL README \
-  Documentation \
-  contrib \
-  $PKG/usr/doc/git-$VERSION
+	COPYING* INSTALL README \
+	Documentation \
+	contrib \
+	$PKG/usr/doc/git-$VERSION
 ( cd $PKG/usr/doc/git-$VERSION/Documentation ; rm *.1 *.3 *.7 )
 ( cd $PKG/usr/doc/git-$VERSION && find . -name ".git*" -exec rm -r "{}" \; )
 
 make $NUMJOBS \
-  prefix=/usr \
-  mandir=/usr/man \
-  CFLAGS="$SLKCFLAGS" \
-  INSTALLDIRS=vendor \
-  ASCIIDOC8=YesPlease \
-  all doc || exit 1
+	prefix=/usr \
+	mandir=/usr/man \
+	CFLAGS="$SLKCFLAGS" \
+	INSTALLDIRS=vendor \
+	ASCIIDOC8=YesPlease \
+	all doc || exit 1
 
 make \
-  prefix=/usr \
-  mandir=/usr/man \
-  "CFLAGS=$SLKCFLAGS" \
-  INSTALLDIRS=vendor \
-  ASCIIDOC8=YesPlease \
-  install \
-  install-doc \
-  DESTDIR=$PKG || exit 1
+	prefix=/usr \
+	mandir=/usr/man \
+	"CFLAGS=$SLKCFLAGS" \
+	INSTALLDIRS=vendor \
+	ASCIIDOC8=YesPlease \
+	install \
+	install-doc \
+	DESTDIR=$PKG || exit 1
 
 mv $PKG/usr/share/man/man3 $PKG/usr/man
 rmdir $PKG/usr/share/man
 
 # Compress and if needed symlink the man pages:
 if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
+	( cd $PKG/usr/man
+	for manpagedir in $(find . -type d -name "man*") ; do
+		( cd $manpagedir
+		for eachpage in $( find . -type l -maxdepth 1) ; do
+			ln -s $( readlink $eachpage ).gz $eachpage.gz
+			rm $eachpage
+		done
+		gzip -9 *.?
+		)
+	done
+	)
+fi # if [ -d $PKG/usr/man ]
 
-find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
-  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF | \
+	cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 # Since Stuart Winter hates hard links.  ;-)
 #
 # Switch a hard link with a soft link:
 ( cd $PKG/usr/bin
-  find . -links +1 -not -name git | while read gitfile ; do
-    if [ git -ef $gitfile ]; then
-      rm -vf $gitfile
-      ln -vfs git $gitfile
-    fi
-  done
+	find . -links +1 -not -name git | while read gitfile ; do
+		if [ git -ef $gitfile ]; then
+			rm -vf $gitfile
+			ln -vfs git $gitfile
+		fi
+	done
 )
 
 # This removes our DESTDIR from the packlist filenames, to keep perl's 
 # internal inventories consistent and correct.
 find $PKG -name .packlist | while read plist ; do
-  sed -e "s%/share/man%/man%g" \
-      -e "s%$PKG%%g" \
-      -e "s%\.1$%\.1\.gz%g" \
-      -e "s%\.2$%\.2\.gz%g" \
-      -e "s%\.3$%\.3\.gz%g" \
-      -e "s%\.3pm$%\.3pm\.gz%g" \
-      -e "s%\.4$%\.4\.gz%g" \
-      -e "s%\.5$%\.5\.gz%g" \
-      -e "s%\.6$%\.6\.gz%g" \
-      -e "s%\.7$%\.7\.gz%g" \
-      -e "s%\.8$%\.8\.gz%g" \
-      ${plist} > ${plist}.new
-      mv -f ${plist}.new ${plist}
+	sed -e "s%/share/man%/man%g" \
+		-e "s%$PKG%%g" \
+		-e "s%\.1$%\.1\.gz%g" \
+		-e "s%\.2$%\.2\.gz%g" \
+		-e "s%\.3$%\.3\.gz%g" \
+		-e "s%\.3pm$%\.3pm\.gz%g" \
+		-e "s%\.4$%\.4\.gz%g" \
+		-e "s%\.5$%\.5\.gz%g" \
+		-e "s%\.6$%\.6\.gz%g" \
+		-e "s%\.7$%\.7\.gz%g" \
+		-e "s%\.8$%\.8\.gz%g" \
+		${plist} > ${plist}.new
+	mv -f ${plist}.new ${plist}
 done
 
 # This is junk:
 eval $(perl '-V:privlib')
 ( cd $PKG$(dirname $privlib) && rm -rf 5.* )
 
-mkdir -p $PKG/install
-cat $CWD/slack-desc > $PKG/install/slack-desc
+mkdir -p "${PKG}/install"
+cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"
+if [ -e "${CWD}/doinst.sh" ]; then
+	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh"
+fi
 
-cd $PKG
-/sbin/makepkg -l y -c n $TMP/git-$VERSION-$ARCH-$BUILD.txz
+# Compress and link manpages, if any:
+if [ -d $PKG/usr/man ]; then
+	( cd $PKG/usr/man
+		for manpagedir in $(find . -type d -name "man*") ; do
+			( cd $manpagedir
+				for eachpage in $( find . -type l -maxdepth 1) ; do
+					ln -s $( readlink $eachpage ).gz $eachpage.gz
+					rm $eachpage
+				done
+				gzip -9 *.*
+			)
+		done
+	)
+fi # if [ -d $PKG/usr/man ]
+# Compress info pages
+if [ -d $PKG/usr/info ]; then
+	rm -rf $PKG/usr/info/dir
+	gzip -9 $PKG/usr/info/*
+fi # if [ -d $PKG/usr/info ]
+
+# Build the package:
+cd "${PKG}"
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
 
 md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
-"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
-
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
