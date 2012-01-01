@@ -22,6 +22,9 @@
 
 # Modified 2010/Apr/14 @ Zdenek Styblik
 # Desc: Slackware's SlackBuild template
+set -e
+set -u
+
 VERSION=${VERSION:-0.2}
 ARCH=${ARCH:-x86_64}
 NUMJOBS=${NUMJOBS:-" -j7 "}
@@ -33,19 +36,30 @@ TRSFX=""
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-$APPL
-
+#
 LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
 SLKLDFLAGS=${SLKLDFLAGS:-""}
 
 if [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
 elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
+	SLKCFLAGS="${SLKCFLAGS} -O2"
 elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
 	LIBDIRSUFFIX=64
 fi
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
 
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS=""
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
 rm -rf "${PKG}"
 mkdir -p "${TMP}" "${PKG}"
 
@@ -55,7 +69,7 @@ rm -rf "${APPL}-${VERSION}"
 cd "${PKG}"
 mkdir -p etc/rc.d/
 
-echo Building ...
+printf "Building ...\n"
 
 for SCRIPT in rc.{firewall,firewall-lan,firewall-local}; do
 	cat "${CWD}/scripts/${SCRIPT}" > "${PKG}/etc/rc.d/${SCRIPT}.new"
@@ -67,7 +81,7 @@ done # for SCRIPT
 mkdir -p "${PKG}/install"
 cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"
 if [ -e "${CWD}/doinst.sh" ]; then
-	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh";
+	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh"
 fi
 
 # Build the package:
@@ -75,5 +89,5 @@ cd "${PKG}"
 makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
 
 md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
-"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
 
