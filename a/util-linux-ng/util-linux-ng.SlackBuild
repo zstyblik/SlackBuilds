@@ -23,55 +23,85 @@
 # Slackware build script for util-linux-ng
 
 VERSION=${VERSION:-$(echo util-linux-ng*.tar.?z* | cut -d - -f 4  | rev | cut -f 3- -d . | rev)}
+ARCH=${ARCH:-$(uname -m)}
+NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
+AUTHOR=""
+APPL="util-linux-ng"
+TRSFX="tar.bz2"
 
-ADJTIMEXVERS=1.23
-SETSERIALVERS=2.17
-ZIPTOOLVERS=1.4.0
-
-# Automatically determine the architecture we're building on:
-if [ -z "$ARCH" ]; then
-  case "$( uname -m )" in
-    i?86) export ARCH=i486 ;;
-    arm*) export ARCH=arm ;;
-    # Unless $ARCH is already set, use uname -m for all other archs:
-       *) export ARCH=$( uname -m ) ;;
-  esac
-fi
-
-if [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-  LIBDIRSUFFIX="64"
-else
-  SLKCFLAGS="-O2"
-  LIBDIRSUFFIX=""
-fi
+ADJTIMEXVERS=${ADJTIMEXVERS:-'1.23'}
+SETSERIALVERS=${SETSERIALVERS:-'2.17'}
+ZIPTOOLVERS=${ZIPTOOLVERS:-'1.4.0'}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-util-linux-ng
+PKG="${TMP}/package-${APPL}"
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
 
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
+
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS="--prefix=/usr \
+	--libdir=/usr/lib${LIBDIRSUFFIX} \
+	--sysconfdir=/etc \
+	--localstatedir=/var \
+	--mandir=/usr/man \
+	--infodir=/usr/info \
+	--docdir=/usr/doc/util-linux-ng-$VERSION \
+	--disable-static \
+	--enable-arch \
+	--enable-agetty \
+	--disable-init \
+	--enable-kill \
+	--enable-rdev \
+	--disable-last \
+	--enable-mesg \
+	--enable-raw \
+	--enable-rename \
+	--enable-reset \
+	--disable-login-utils \
+	--enable-schedutils \
+	--enable-wall \
+	--enable-write \
+	--enable-use-tty-group \
+	--enable-libblkid \
+	--enable-libuuid \
+	--disable-uuidd \
+	--build=$ARCH-slackware-linux"
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
 rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP || exit 1
-rm -rf util-linux-ng-$VERSION
-tar xvf $CWD/util-linux-ng-$VERSION.tar.?z* || exit 1
-cd util-linux-ng-$VERSION || exit 1
+rm -rf $APPL-$VERSION
+tar xvf $CWD/$APPL-$VERSION.tar.?z* || exit 1
+cd $APPL-$VERSION || exit 1
 
 cat $CWD/util-linux-ng-2.18-20100706.diff | patch -p1 || exit 1
 
 chown -R root.root .
 find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
 
 # Disabled login and init stuff from being built, as this is provided by 
 # shadow and sysvinit
@@ -91,38 +121,9 @@ find . \
 zcat $CWD/util-linux-ng.fdisk-no-solaris.diff.gz | patch -p1 || exit 1
 
 CFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --localstatedir=/var \
-  --mandir=/usr/man \
-  --infodir=/usr/info \
-  --docdir=/usr/doc/util-linux-ng-$VERSION \
-  --disable-static \
-  --enable-arch \
-  --enable-agetty \
-  --disable-init \
-  --enable-kill \
-  --enable-rdev \
-  --disable-last \
-  --enable-mesg \
-  --enable-raw \
-  --enable-rename \
-  --enable-reset \
-  --disable-login-utils \
-  --enable-schedutils \
-  --enable-wall \
-  --enable-write \
-  --enable-use-tty-group \
-  --enable-libblkid \
-  --enable-libuuid \
-  --disable-uuidd \
-  --build=$ARCH-slackware-linux \
-  || exit 1
-
-make || exit 1
-make install DESTDIR=$PKG || make install DESTDIR=$PKG
+./configure ${CONFIGUREFLAGS} || exit 1
+make ${MAKEFLAGS} || exit 2
+make install DESTDIR=$PKG || exit 3
 
 # Move the libblkid and libuuid libraries to /lib${LIBSUFFIX}
 mkdir -p $PKG/lib${LIBDIRSUFFIX}
@@ -139,13 +140,13 @@ mkdir -p $PKG/lib${LIBDIRSUFFIX}
 # If this had to be moved, some place out of /usr might
 # have shown a grain of insight...
 if [ -r $PKG/usr/sbin/fdformat ]; then
-  mkdir -p $PKG/usr/bin
-  mv $PKG/usr/sbin/fdformat $PKG/usr/bin/fdformat
-  # Now since stuff will start looking in this new place,
-  # we have no choice but to link these:
-  ( cd $PKG/usr/sbin
-    ln -sf ../bin/fdformat .
-  )
+	mkdir -p $PKG/usr/bin
+	mv $PKG/usr/sbin/fdformat $PKG/usr/bin/fdformat
+	# Now since stuff will start looking in this new place,
+	# we have no choice but to link these:
+	( cd $PKG/usr/sbin
+		ln -sf ../bin/fdformat .
+	)
 fi
 
 # Install (probably obsolete) rdev manually:
@@ -205,7 +206,7 @@ chown root:root $PKG/bin/hostname
 cd man/en_US
 for page in hostname.1 dnsdomainname.1 nisdomainname.1 ypdomainname.1 \
 domainname.1 ; do
-  cat $page | gzip -9c > $PKG/usr/man/man1/$page.gz
+	cat $page | gzip -9c > $PKG/usr/man/man1/$page.gz
 done
 
 # Build adjtimex
@@ -223,7 +224,7 @@ chmod 0755 $PKG/sbin/adjtimex
 cat adjtimex.8 | gzip -9c > $PKG/usr/man/man8/adjtimex.8.gz
 mkdir -p $PKG/usr/doc/adjtimex-$ADJTIMEXVERS
 cp -a COPYING COPYRIGHT README README.ru adjtimex.lsm \
-  $PKG/usr/doc/adjtimex-$ADJTIMEXVERS
+	$PKG/usr/doc/adjtimex-$ADJTIMEXVERS
 
 # Build setserial
 cd $TMP || exit 1
@@ -278,22 +279,22 @@ cd $TMP/util-linux-ng-$VERSION # Go back home :)
 )
 
 find $PKG | xargs file | grep -e "executable" -e "shared object" \
-  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+	| grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 # Compress and if needed symlink the man pages:
 if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.?
-      )
-    done
-  )
-fi
+	( cd $PKG/usr/man
+		for manpagedir in $(find . -type d -name "man*") ; do
+			( cd $manpagedir
+				for eachpage in $( find . -type l -maxdepth 1) ; do
+					ln -s $( readlink $eachpage ).gz $eachpage.gz
+					rm $eachpage
+				done
+				gzip -9 *.?
+			)
+		done
+	)
+fi # if [ -d $PKG/usr/man ]
 
 # Compress info page and remove dir file
 rm $PKG/usr/info/dir
@@ -301,16 +302,16 @@ gzip -9 $PKG/usr/info/*
 
 mkdir -p $PKG/usr/doc/util-linux-ng-$VERSION
 cp -a AUTHORS COPYING DEPRECATED NEWS README* TODO \
-  docs/v${VERSION}-ReleaseNotes \
-  $PKG/usr/doc/util-linux-ng-$VERSION
+	docs/v${VERSION}-ReleaseNotes \
+	$PKG/usr/doc/util-linux-ng-$VERSION
 
 mkdir $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/util-linux-ng-$VERSION-$ARCH-$BUILD.txz
+/sbin/makepkg -l y -c n $TMP/$APPL-$VERSION-$ARCH-$BUILD.txz
 
 md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
-"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
 
