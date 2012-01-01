@@ -20,6 +20,8 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+set -e
+set -u
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -34,7 +36,9 @@ mkdir -p $TMP $PKG
 echo "Using /usr/src/linux-${VERSION}/"
 echo "Make sure this is *ready*..."
 mkdir -p $PKG/lib/firmware
-( cd /usr/src/linux-${VERSION} && make firmware_install INSTALL_FW_PATH=$PKG/lib/firmware )
+( cd /usr/src/linux-${VERSION} \
+	&& make firmware_install INSTALL_FW_PATH=$PKG/lib/firmware 
+)
 cp -a /usr/src/linux-${VERSION}/firmware/WHENCE $PKG/lib/firmware
 
 mkdir -p $PKG/install
@@ -43,6 +47,6 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 cd $PKG
 /sbin/makepkg -l y -c n "${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.txz"
 
-md5sum "${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.txz" \
-	> "${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.md5"
+md5sum "${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.txz" > \
+	"${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.md5"
 
