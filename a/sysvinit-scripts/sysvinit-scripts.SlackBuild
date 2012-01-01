@@ -20,14 +20,21 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# Modified 2010/Apr/14 @ Zdenek Styblik
+set -e
+set -u
 
 VERSION=${VERSION:-1.2}
 ARCH=noarch
+NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-43}
+AUTHOR=""
+APPL="package-sysvinit-scripts"
+TRSFX="tar.bz2"
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-sysvinit-scripts
+PKG="${TMP}/package-${APPL}"
 
 rm -rf $PKG
 mkdir -p $TMP $PKG
@@ -35,9 +42,9 @@ mkdir -p $TMP $PKG
 # Install Slackware scripts and config files from $CWD/scripts/:
 mkdir -p $PKG/etc/rc.d
 for file in rc.{4,6,K,M,S} rc.local rc.loop rc.sysvinit ; do
-  cp -a $CWD/scripts/$file $PKG/etc/rc.d/${file}.new
-  chmod 755 $PKG/etc/rc.d/${file}.new
-  chown root:root $PKG/etc/rc.d/${file}.new
+	cp -a $CWD/scripts/$file $PKG/etc/rc.d/${file}.new
+	chmod 755 $PKG/etc/rc.d/${file}.new
+	chown root:root $PKG/etc/rc.d/${file}.new
 done
 cat $CWD/scripts/inittab > $PKG/etc/inittab.new
 chmod 644 $PKG/etc/inittab.new
@@ -55,6 +62,9 @@ zcat $CWD/doinst.sh > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 # Build the package:
-cd $PKG
-/sbin/makepkg -l y -c n $TMP/sysvinit-scripts-$VERSION-$ARCH-$BUILD.txz
+cd "${PKG}"
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
+
+md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
 
