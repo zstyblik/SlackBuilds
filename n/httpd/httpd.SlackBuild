@@ -23,55 +23,83 @@
 # This script was written using the one from slackbuilds.org as a reference,
 # so thanks to Adis Nezirovic ( adis _at_ linux.org.ba ) for the original work.
 
+# Modified 2010/Apr/14 @ Zdenek Styblik
+set -e
+set -u
 
-PKGNAM=httpd
-VERSION=2.2.19 
-BUILD=${BUILD:-3}
-
-# Automatically determine the architecture we're building on:
-if [ -z "$ARCH" ]; then
-  case "$( uname -m )" in
-    i?86) export ARCH=i486 ;;
-    arm*) export ARCH=arm ;;
-    # Unless $ARCH is already set, use uname -m for all other archs:
-       *) export ARCH=$( uname -m ) ;;
-  esac
-fi
-
+VERSION=${VERSION:-2.2.19}
+ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
+BUILD=${BUILD:-1}
+AUTHOR=""
+APPL="httpd"
+TRSFX="tar.bz2"
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-${PKGNAM}
-rm -rf $PKG
-mkdir -p $TMP $PKG
+PKG="${TMP}/package-${APPL}"
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
 
-if [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-  LIBDIRSUFFIX="64"
-else
-  SLKCFLAGS="-O2"
-  LIBDIRSUFFIX=""
-fi
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
 
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS="--enable-layout=Slackware-FHS \
+	--with-mpm=prefork \
+	--with-apr=/usr \
+	--with-apr-util=/usr \
+	--enable-mods-shared=all \
+	--enable-so \
+	--enable-pie \
+	--enable-cgi \
+	--with-pcre \
+	--enable-ssl \
+	--enable-rewrite \
+	--enable-vhost-alias \
+	--enable-proxy \
+	--enable-proxy-http \
+	--enable-proxy-ftp \
+	--enable-proxy-balancer \
+	--enable-cache \
+	--enable-mem-cache \
+	--enable-file-cache \
+	--enable-disk-cache \
+	--disable-speling \
+	--enable-dav \
+	--enable-ldap \
+	--enable-authnz-ldap \
+	--enable-authn-anon \
+	--enable-authn-alias \
+	--build=$ARCH-slackware-linux"
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
 cd $TMP
-rm -rf ${PKGNAM}-${VERSION}
-tar xvf $CWD/${PKGNAM}-$VERSION.tar.bz2 || exit 1
-cd ${PKGNAM}-$VERSION
+rm -rf ${APPL}-${VERSION}
+tar xvf $CWD/${APPL}-$VERSION.tar.bz2 || exit 1
+cd ${APPL}-$VERSION
 
 # Make sure ownerships and permissions are sane:
 chown -R root:root .
 find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
 
 # "prefork" is the default, safe, mpm type.  If you *are not* using PHP, and you
 # like to live on the bleeding edge, you may wish to change the --with-mpm option
@@ -81,61 +109,38 @@ find . \
 # I'd leave this option the way is it on any production box that's keeping up
 # with HTTP requests.  No reason to chance it, IMHO.
 
-zcat $CWD/config.layout.diff.gz | sed -e "s#lib/httpd#lib${LIBDIRSUFFIX}/httpd#" | patch --verbose -p1 || exit 1
+zcat $CWD/config.layout.diff.gz | \
+	sed -e "s#lib/httpd#lib${LIBDIRSUFFIX}/httpd#" | \
+	patch --verbose -p1 || exit 1
 
 # Patch to fix aliasing issue exposed by gcc-4.5.1:
-zcat $CWD/httpd.brigade_move.__noinline__.gcc451.diff.gz | patch --verbose -p1 || exit 1
+zcat $CWD/httpd.brigade_move.__noinline__.gcc451.diff.gz | \
+	patch --verbose -p1 || exit 1
 
 # Configure:
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --enable-layout=Slackware-FHS \
-  --with-mpm=prefork \
-  --with-apr=/usr \
-  --with-apr-util=/usr \
-  --enable-mods-shared=all \
-  --enable-so \
-  --enable-pie \
-  --enable-cgi \
-  --with-pcre \
-  --enable-ssl \
-  --enable-rewrite \
-  --enable-vhost-alias \
-  --enable-proxy \
-  --enable-proxy-http \
-  --enable-proxy-ftp \
-  --enable-proxy-balancer \
-  --enable-cache \
-  --enable-mem-cache \
-  --enable-file-cache \
-  --enable-disk-cache \
-  --disable-speling \
-  --enable-dav \
-  --enable-ldap \
-  --enable-authnz-ldap \
-  --enable-authn-anon \
-  --enable-authn-alias \
-  --build=$ARCH-slackware-linux || exit 1
-
+./configure ${CONFIGUREFLAGS} || exit 1
 # Build and install:
-make $NUMJOBS || make || exit 1
-make install DESTDIR=$PKG || exit 1
+make $NUMJOBS ${MAKEFLAGS} || make ${MAKEFLAGS} || exit 2
+make install DESTDIR=$PKG || exit 3
 
 rmdir $PKG/usr/bin
 
 # Tweak default apache configuration
 ( cd $PKG
-  zcat $CWD/httpd.nossldefault.diff.gz | sed -e "s#lib/httpd#lib${LIBDIRSUFFIX}/httpd#" | patch -p1 --verbose || exit 1
-  zcat $CWD/httpd.runasapache.diff.gz | patch -p1 --verbose || exit 1
-  rm -f $PKG/etc/httpd/httpd.conf~ $PKG/etc/httpd/httpd.conf.orig
+	zcat $CWD/httpd.nossldefault.diff.gz | \
+		sed -e "s#lib/httpd#lib${LIBDIRSUFFIX}/httpd#" | \
+		patch -p1 --verbose || exit 1
+	zcat $CWD/httpd.runasapache.diff.gz | patch -p1 --verbose || exit 1
+	rm -f $PKG/etc/httpd/httpd.conf~ $PKG/etc/httpd/httpd.conf.orig
 ) || exit 1
 # Change config files to .new:
 ( cd $PKG/etc/httpd
-  mv httpd.conf httpd.conf.new
-  for file in extra/*; do
-    mv $file "${file}.new"
-  done
+	mv httpd.conf httpd.conf.new
+	for file in extra/*; do
+		mv $file "${file}.new"
+	done
 )
 
 cat << EOF >> $PKG/etc/httpd/httpd.conf.new
@@ -163,20 +168,21 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 
-mkdir -p $PKG/usr/doc/$PKGNAM-$VERSION/
+mkdir -p $PKG/usr/doc/$APPL-$VERSION/
 cp -a \
-  ABOUT_APACHE Apache.dsw BuildBin.dsp CHANGES INSTALL InstallBin.dsp LAYOUT LICENSE NOTICE NWGNUmakefile README* ROADMAP VERSIONING \
-  $PKG/usr/doc/$PKGNAM-$VERSION
+	ABOUT_APACHE Apache.dsw BuildBin.dsp CHANGES INSTALL InstallBin.dsp \
+	LAYOUT LICENSE NOTICE NWGNUmakefile README* ROADMAP VERSIONING \
+	$PKG/usr/doc/$APPL-$VERSION
 
 # Other distributions also strip the manual down to just English.
 # If this isn't your language of choice, mea culpa.
 ( cd $PKG/srv/httpd/htdocs/manual
-  for file in $(find . -type f -name "*.html") ; do
-    if [ -f ${file}.en ]; then
-      cp ${file}.en ${file}
-      rm -f ${file}.*
-    fi
-  done
+	for file in $(find . -type f -name "*.html") ; do
+		if [ -f ${file}.en ]; then
+			cp ${file}.en ${file}
+			rm -f ${file}.*
+		fi
+	done
 )
 
 # On Slackware, the traditional location for the Apache document root has always
@@ -186,8 +192,8 @@ cp -a \
 # will look for htdig's htsearch here:  /var/www/cgi-bin/htsearch
 mv $PKG/srv/httpd $PKG/var/www
 ( cd $PKG/srv
-  ln -sf /var/www .
-  ln -sf /var/www httpd
+	ln -sf /var/www .
+	ln -sf /var/www httpd
 )
 
 # OK, it's just not generally good form to put your web site in /var/www/htdocs,
@@ -196,24 +202,33 @@ mv $PKG/srv/httpd $PKG/var/www
 mv $PKG/var/www/htdocs/index.html $PKG/var/www/htdocs/index.html.new
 
 # Strip binaries:
-find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
-  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find $PKG | xargs file | grep -e "executable" -e "shared object" | \
+	grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 # Compress and link manpages, if any:
 if [ -d $PKG/usr/man ]; then
-  ( cd $PKG/usr/man
-    for manpagedir in $(find . -type d -name "man*") ; do
-      ( cd $manpagedir
-        for eachpage in $( find . -type l -maxdepth 1) ; do
-          ln -s $( readlink $eachpage ).gz $eachpage.gz
-          rm $eachpage
-        done
-        gzip -9 *.*
-      )
-    done
-  )
-fi
+	( cd $PKG/usr/man
+		for manpagedir in $(find . -type d -name "man*") ; do
+			( cd $manpagedir
+				for eachpage in $( find . -type l -maxdepth 1) ; do
+					ln -s $( readlink $eachpage ).gz $eachpage.gz
+					rm $eachpage
+				done
+				gzip -9 *.*
+			)
+		done
+	)
+fi # if [ -d $PKG/usr/man ]
+# Compress info pages
+if [ -d $PKG/usr/info ]; then
+	rm -rf $PKG/usr/info/dir
+	gzip -9 $PKG/usr/info/*
+fi # if [ -d $PKG/usr/info ]
 
-cd $PKG
-/sbin/makepkg -l y -c n $TMP/${PKGNAM}-$VERSION-$ARCH-$BUILD.txz
+# Build the package:
+cd "${PKG}"
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
+
+md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
 
