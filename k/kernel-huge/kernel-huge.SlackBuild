@@ -19,11 +19,13 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+set -e
+set -u
 
 
 KERNNAME=${KERNNAME:-huge}
 VERSION=${VERSION:-2.6.32.42}
-ARCH=${ARCH:-x86_64}
+ARCH=${ARCH:-$(uname -m)}
 KARCH=${KARCH:-x86}
 BUILD=${BUILD:-1}
 
@@ -37,36 +39,36 @@ mkdir -p $TMP $PKG
 # First try to find the loot in the current dir, then look
 # in /usr/src/linux-$VERSION:
 if [ -r $CWD/bzImage ]; then
-  KERNEL=$CWD/bzImage
+	KERNEL=$CWD/bzImage
 elif [ -r $CWD/vmlinuz ]; then
-  KERNEL=$CWD/vmlinuz
+	KERNEL=$CWD/vmlinuz
 elif [ -r $CWD/vmlinuz* ]; then
-  KERNEL=$CWD/vmlinuz*
+	KERNEL=$CWD/vmlinuz*
 else 
-  KERNEL=/usr/src/linux-$VERSION/arch/${KARCH}/boot/bzImage
+	KERNEL=/usr/src/linux-$VERSION/arch/${KARCH}/boot/bzImage
 fi
 
 if [ -r $CWD/System.map.gz ]; then
-  gzip -d $CWD/System.map.gz
+	gzip -d $CWD/System.map.gz
 elif [ -r $CWD/System.map.bz2 ]; then
-  bzip2 -d $CWD/System.map.bz2
+	bzip2 -d $CWD/System.map.bz2
 fi
 
 if [ -r $CWD/System.map ]; then
-  SYSMAP=$CWD/System.map
+	SYSMAP=$CWD/System.map
 elif [ -r $CWD/System.map* ]; then
-  SYSMAP=$CWD/System.map*
+	SYSMAP=$CWD/System.map*
 else
-  SYSMAP=/usr/src/linux-$VERSION/System.map
+	SYSMAP=/usr/src/linux-$VERSION/System.map
 fi
 if [ -r $CWD/config ]; then
-  CONFIG=$CWD/config
+	CONFIG=$CWD/config
 elif [ -r $CWD/config* ]; then
-  CONFIG=$CWD/config*
+	CONFIG=$CWD/config*
 elif [ -r $CWD/.config ]; then
-  CONFIG=$CWD/.config
+	CONFIG=$CWD/.config
 else
-  CONFIG=/usr/src/linux-$VERSION/.config
+	CONFIG=/usr/src/linux-$VERSION/.config
 fi
 
 cat << EOF
@@ -99,5 +101,5 @@ cd $PKG
 /sbin/makepkg -l y -c n $TMP/kernel-${KERNNAME}-${VERSION}-${ARCH}-${BUILD}.txz
 
 md5sum "${TMP}/kernel-${KERNNAME}-${VERSION}-${ARCH}-${BUILD}.txz" > \
-"${TMP}/kernel-${KERNNAME}-${VERSION}-${ARCH}-${BUILD}.md5"
+	"${TMP}/kernel-${KERNNAME}-${VERSION}-${ARCH}-${BUILD}.md5"
 
