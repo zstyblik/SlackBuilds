@@ -22,69 +22,79 @@
 # WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+set -e
+set -u
 
-PRGNAM=sqlite
-VERSION=3.6.21
-ARCH=${ARCH:-x86_64}
+VERSION=${VERSION:-3.6.21}
+ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
-
-if [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "i686" ]; then
-  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-  LIBDIRSUFFIX="64"
-fi
+AUTHOR=""
+APPL=sqlite
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-$PRGNAM
+PKG=$TMP/package-$APPL
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
 
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
+
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS="--prefix=/usr \
+	--libdir=/usr/lib${LIBDIRSUFFIX} \
+	--sysconfdir=/etc \
+	--localstatedir=/var \
+	--enable-threadsafe \
+	--enable-cross-thread-connections \
+	--enable-tempstore=yes \
+	--enable-load-extension \
+	--enable-static=no \
+	--build=$ARCH-slackware-linux"
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
 rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
-rm -rf $PRGNAM-$VERSION
-tar xvf $CWD/$PRGNAM-$VERSION.tar.?z* || exit 1
-cd $PRGNAM-$VERSION || exit 1
-chown -R root.root .
-find . \
- \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
- -exec chmod 755 {} \; -o \
- \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
- -exec chmod 644 {} \;
+rm -rf $APPL-$VERSION
+tar xvf $CWD/$APPL-$VERSION.tar.?z* || exit 1
+cd $APPL-$VERSION || exit 1
 
-configure() {
+chown -R root:root .
+find . \
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
+
+printf "Building ...\n"
+if [ ! -e configure ]; then
+	# Try regenerating configure:
+	autoconf
+fi # if [ ! -e configure ]
 CFLAGS="$SLKCFLAGS" \
 CXXFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --localstatedir=/var \
-  --enable-threadsafe \
-  --enable-cross-thread-connections \
-  --enable-tempstore=yes \
-  --enable-load-extension \
-  --enable-static=no \
-  --build=$ARCH-slackware-linux 
-  return $?
-}
+./configure ${CONFIGUREFLAGS} || exit 1
+make $NUMJOBS ${MAKEFLAGS} || make ${MAKEFLAGS} || exit 2
+make install DESTDIR=$PKG || exit 3
 
-if ! configure ; then
-  # Try regenerating configure:
-  autoconf
-  configure || exit 1
-fi
-
-make $NUMJOBS || make || exit 1
-make install DESTDIR=$PKG || exit 1
-
-find $PKG | xargs file | grep -e "executable" -e "shared object" \
-  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find $PKG | xargs file | grep -e "executable" -e "shared object" | \
+	grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 # Add missed man page:
 install -D -m 0644 sqlite3.1 $PKG/usr/man/man1/sqlite3.1
@@ -92,23 +102,23 @@ gzip -9 $PKG/usr/man/man1/sqlite3.1
 
 # Fix up the pkgconfig file
 sed -i 's|Libs: -L${libdir} -lsqlite3|Libs: -L${libdir} -lsqlite3 -ldl|g' \
-  $PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/sqlite3.pc
+	$PKG/usr/lib${LIBDIRSUFFIX}/pkgconfig/sqlite3.pc
 
-mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKG/usr/doc/$APPL-$VERSION
 cp -a \
-  README* VERSION \
-  $PKG/usr/doc/$PRGNAM-$VERSION
+	README* VERSION \
+	$PKG/usr/doc/$APPL-$VERSION
 # Add a COPYRIGHT file -- http://www.sqlite.org/copyright.html
-zcat $CWD/COPYRIGHT.gz > $PKG/usr/doc/$PRGNAM-$VERSION/COPYRIGHT
-rm -rf $PKG/usr/doc/$PRGNAM-$VERSION/CVS
+zcat $CWD/COPYRIGHT.gz > $PKG/usr/doc/$APPL-$VERSION/COPYRIGHT
+rm -rf $PKG/usr/doc/$APPL-$VERSION/CVS
 find $PKG/usr/doc -type f -exec chmod 0644 {} \;
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/$PRGNAM-$VERSION-$ARCH-$BUILD.txz
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
 
 md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
-"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
 
