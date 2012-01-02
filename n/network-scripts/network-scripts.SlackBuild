@@ -19,33 +19,36 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+set -e
+set -u
 
 
-PKGNAM=network-scripts
+APPL=network-scripts
 VERSION=${VERSION:-13.0}
 ARCH=noarch
 BUILD=${BUILD:-3}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-${PKGNAM}
+PKG=$TMP/package-${APPL}
 
 rm -rf $PKG
 mkdir -p $TMP $PKG/etc/rc.d
 ( cd $PKG/etc/rc.d
-  for file in rc.inet1.conf rc.inet1 rc.inet2 rc.ip_forward ; do
-    cp -a $CWD/scripts/$file ${file}.new
-  done
-  chown root:root *
-  chmod 755 rc.inet1.new rc.inet2.new
-  chmod 600 rc.inet1.conf.new
+	for file in rc.inet1.conf rc.inet1 rc.inet2 rc.ip_forward ; do
+		cp -a $CWD/scripts/$file ${file}.new
+	done
+	chown root:root *
+	chmod 755 rc.inet1.new rc.inet2.new
+	chmod 600 rc.inet1.conf.new
 )
 ( cd $PKG/etc
-  for file in HOSTNAME host.conf hosts.allow hosts.deny hosts.equiv hosts networks nntpserver protocols resolv.conf ; do
-    cp -a $CWD/scripts/$file ${file}.new
-    chmod 644 ${file}.new
-  done
-  chown root:root *
+	for file in HOSTNAME host.conf hosts.allow hosts.deny hosts.equiv \
+		hosts networks nntpserver protocols resolv.conf ; do
+		cp -a $CWD/scripts/$file ${file}.new
+		chmod 644 ${file}.new
+	done
+	chown root:root *
 )
 mkdir -p $PKG/sbin
 cp -a $CWD/scripts/netconfig $PKG/sbin/netconfig
@@ -58,7 +61,8 @@ chmod 755 $PKG/var/log/setup/setup.netconfig
 
 # Add manpages:
 mkdir -p $PKG/usr/man/man{5,8}
-cat $CWD/manpages/rc.inet1.conf.5 | gzip -9c > $PKG/usr/man/man5/rc.inet1.conf.5.gz
+cat $CWD/manpages/rc.inet1.conf.5 | \
+	gzip -9c > $PKG/usr/man/man5/rc.inet1.conf.5.gz
 cat $CWD/manpages/rc.inet1.8 | gzip -9c > $PKG/usr/man/man8/rc.inet1.8.gz
 
 mkdir -p $PKG/install
@@ -66,5 +70,5 @@ zcat $CWD/doinst.sh.gz > $PKG/install/doinst.sh
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/${PKGNAM}-$VERSION-$ARCH-$BUILD.txz
+/sbin/makepkg -l y -c n $TMP/${APPL}-$VERSION-$ARCH-$BUILD.txz
 
