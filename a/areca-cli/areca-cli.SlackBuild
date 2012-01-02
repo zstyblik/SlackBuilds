@@ -92,7 +92,7 @@ chmod u+x $PKG/usr/sbin/areca_cli
 mkdir -p "${PKG}/install"
 cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"
 if [ -e "${CWD}/doinst.sh" ]; then
-	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh";
+	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh"
 fi
 
 # Compress and link manpages, if any:
