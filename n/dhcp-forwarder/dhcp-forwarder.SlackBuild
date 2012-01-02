@@ -97,7 +97,7 @@ make install DESTDIR=$PKG || exit 3
 mkdir -p "${PKG}/install"
 cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"
 if [ -e "${CWD}/doinst.sh" ]; then
-	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh";
+	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh"
 fi
 
 # Compress and link manpages, if any:
