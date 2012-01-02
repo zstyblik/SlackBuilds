@@ -20,54 +20,69 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-PKGNAM=pango
-VERSION=${VERSION:-$(echo pango-*.tar.?z* | rev | cut -f 3- -d . | cut -f 1 -d - | rev)}
-BUILD=${BUILD:-1}
+# Modified 2010/Apr/14 @ Zdenek Styblik
+set -e
+set -u
 
-# Automatically determine the architecture we're building on:
-if [ -z "$ARCH" ]; then
-  case "$( uname -m )" in
-    i?86) export ARCH=i486 ;;
-    arm*) export ARCH=arm ;;
-    # Unless $ARCH is already set, use uname -m for all other archs:
-       *) export ARCH=$( uname -m ) ;;
-  esac
-fi
-
-if [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-  LIBDIRSUFFIX=""
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
-  LIBDIRSUFFIX="64"
-else
-  SLKCFLAGS="-O2"
-  LIBDIRSUFFIX=""
-fi
-
+VERSION=${VERSION:-$(echo pango-*.tar.?z* | rev | cut -f 3- -d . | \
+	cut -f 1 -d - | rev)}
+ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
+BUILD=${BUILD:-1}
+AUTHOR=""
+APPL="pango"
+TRSFX="tar.bz2"
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
-PKG=$TMP/package-pango
+PKG="${TMP}/package-${APPL}"
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
 
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
+
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS="--prefix=/usr \
+	--libdir=/usr/lib${LIBDIRSUFFIX} \
+	--sysconfdir=/etc \
+	--mandir=/usr/man \
+	--docdir=/usr/doc/pango-$VERSION \
+	--build=$ARCH-slackware-linux \
+	--host=$ARCH-slackware-linux \
+	--target=$ARCH-slackware-linux \
+	--without-x \
+	--enable-shared"
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
 rm -rf $PKG
 mkdir -p $TMP $PKG/usr
 cd $TMP
-rm -rf pango-$VERSION
-tar xvf $CWD/pango-$VERSION.tar.?z* || exit 1
+rm -rf "${APPL}-${VERSION}"
+tar xvf $CWD/${APPL}-${VERSION}.tar.?z* || exit 1
 
-cd pango-$VERSION
+cd "${APPL}-${VERSION}"
 
 chown -R root:root .
 find . \
-  \( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
-  -exec chmod 755 {} \; -o \
-  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
-  -exec chmod 644 {} \;
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
 
 # Fix for x86_64 (does not hurt the other archs but note that we will start
 # using /etc/pango/$host instead of /etc/pango/ now):
@@ -78,28 +93,17 @@ zcat $CWD/pango.etc.host.location.diff.gz | patch -p1 --verbose || exit 1
 sed -i -e 's#linux|linux-gnu|#linux|linux|#' config.sub
 
 CFLAGS="$SLKCFLAGS" \
-./configure \
-  --prefix=/usr \
-  --libdir=/usr/lib${LIBDIRSUFFIX} \
-  --sysconfdir=/etc \
-  --mandir=/usr/man \
-  --docdir=/usr/doc/pango-$VERSION \
-  --build=$ARCH-slackware-linux \
-  --host=$ARCH-slackware-linux \
-  --target=$ARCH-slackware-linux \
-  --without-x \
-  --enable-shared \
-	|| exit 1
-make $NUMJOBS || make || exit 1
+./configure ${CONFIGUREFLAGS} || exit 1
+make $NUMJOBS ${MAKEFLAGS} || make ${MAKEFLAGS} || exit 2
 
 # Check the host value that is passed to the compile to the one in this script:
 host="$ARCH-slackware-linux"
 compile_host=$(grep 'host_triplet =' pango/Makefile | sed "s/.* = //")
 if [ "x$compile_host" != "x$host" ]; then
-  echo "Host mismatch: compile='$compile_host', SlackBuild='$host'" && exit 1
+	echo "Host mismatch: compile='$compile_host', SlackBuild='$host'" && exit 1
 fi
 
-make install DESTDIR=$PKG || exit 1
+make install DESTDIR=$PKG || exit 3
 
 # Install wrapper for pango-querymodules:
 cp $CWD/update-pango-querymodules $PKG/usr/bin/update-pango-querymodules
@@ -114,14 +118,14 @@ touch $PKG/etc/pango/$host/pango.modules
 # for places where we have two copies of the GTK+ package installed.
 # (we might have x86_64 and i486 packages on the same system, for example.)
 case "$host" in
-  s390x*|x86_64*)
-   mv $PKG/usr/bin/pango-querymodules $PKG/usr/bin/pango-querymodules-64
-   ( cd $PKG/usr/bin ; ln -sf pango-querymodules-64 pango-querymodules )
-   ;;
-  *)
-   mv $PKG/usr/bin/pango-querymodules $PKG/usr/bin/pango-querymodules-32
-   ( cd $PKG/usr/bin ; ln -sf pango-querymodules-32 pango-querymodules )
-   ;;
+	s390x*|x86_64*)
+		mv $PKG/usr/bin/pango-querymodules $PKG/usr/bin/pango-querymodules-64
+		( cd $PKG/usr/bin ; ln -sf pango-querymodules-64 pango-querymodules )
+		;;
+	*)
+		mv $PKG/usr/bin/pango-querymodules $PKG/usr/bin/pango-querymodules-32
+		( cd $PKG/usr/bin ; ln -sf pango-querymodules-32 pango-querymodules )
+		;;
 esac
 
 mkdir -p $PKG/install
@@ -129,25 +133,30 @@ cat <<EOF > $PKG/install/doinst.sh
 # Updating the pango.modules file:
 chroot . /sbin/ldconfig 2> /dev/null
 if [ -x /usr/bin/update-pango-querymodules ]; then
-  /usr/bin/update-pango-querymodules
+	/usr/bin/update-pango-querymodules
 fi
 EOF
 
-find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF \
-  | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF | \
+	cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
 
 find $PKG/usr/man -type f -exec gzip -9 {} \;
-for i in $(find $PKG/usr/man -type l) ; do ln -s $(readlink $i).gz $i.gz ; rm $i ; done
+for i in $(find $PKG/usr/man -type l) ; do 
+	ln -s $(readlink $i).gz $i.gz
+	rm "${i}"
+done
 
 mkdir -p $PKG/usr/doc/pango-$VERSION
 cp -a \
-  AUTHORS COPYING* NEWS README* TODO \
-  $PKG/usr/doc/pango-$VERSION
+	AUTHORS COPYING* NEWS README* TODO \
+	$PKG/usr/doc/pango-$VERSION
 ln -s /usr/share/gtk-doc/html/pango $PKG/usr/doc/pango-$VERSION/html
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n --prepend $TMP/pango-$VERSION-$ARCH-$BUILD.txz
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
 
+md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
