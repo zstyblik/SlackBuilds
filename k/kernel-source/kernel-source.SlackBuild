@@ -22,6 +22,8 @@
 
 # Modified 2010/Apr/14 @ Zdenek Styblik
 # Desc: Slackware's SlackBuild template
+set -e
+set -u
 
 VERSION=${VERSION:-2.6.32.42}
 ARCH=${ARCH:-noarch}
@@ -34,18 +36,30 @@ TRSFX="tar.bz2"
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG=$TMP/package-$APPL
-
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
 SLKLDFLAGS=${SLKLDFLAGS:-""}
 
-if [ "$ARCH" = "i486" ]; then
-  SLKCFLAGS="-O2 -march=i486 -mtune=i686"
-elif [ "$ARCH" = "s390" ]; then
-  SLKCFLAGS="-O2"
-elif [ "$ARCH" = "x86_64" ]; then
-  SLKCFLAGS="-O2 -fPIC"
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
 	LIBDIRSUFFIX=64
-fi
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
 
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS=""
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
 if [ ! -e ../kernel-huge/linux-${VERSION}.$TRSFX ]; then
 	echo "I couldn't find packed linux source \
 	'../kernel-huge/linux-${VERSION}.$TRSFX'"
@@ -55,7 +69,7 @@ fi
 rm -rf $PKG
 mkdir -p $TMP $PKG
 
-echo Building ...
+printf "Building ...\n"
 
 cd $PKG
 mkdir $PKG/usr
@@ -67,7 +81,7 @@ tar xvf $CWD/../kernel-huge/linux-$VERSION.$TRSFX || exit 1
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 if [ -e $CWD/doinst.sh ]; then
-	cat $CWD/doinst.sh | sed "s/LINUXVER/${VERSION}/g" > $PKG/install/doinst.sh;
+	cat $CWD/doinst.sh | sed "s/LINUXVER/${VERSION}/g" > $PKG/install/doinst.sh
 fi
 
 # Build the package:
@@ -75,5 +89,5 @@ cd $PKG
 makepkg -c n -l y $TMP/$APPL-$VERSION-$ARCH-${BUILD}${AUTHOR}.txz
 
 md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
-"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
 
