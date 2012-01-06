@@ -129,8 +129,9 @@ if [ -d $PKG/usr/man ]; then
 	)
 fi # if [ -d $PKG/usr/man ]
 
-find $PKG | xargs file | grep -e "executable" -e "shared object" | grep ELF | \
-	cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find "${PKG}" | xargs file | grep -e "executable" -e "shared object" | \
+	grep -e "ELF" | cut -f 1 -d ':' | \
+	xargs strip --strip-unneeded 2> /dev/null || true
 
 # Since Stuart Winter hates hard links.  ;-)
 #

@@ -279,8 +279,9 @@ cd $TMP/util-linux-$VERSION # Go back home :)
   ln -s hwclock.8 clock.8
 )
 
-find $PKG | xargs file | grep -e "executable" -e "shared object" \
-  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find "${PKG}" | xargs file | grep -e "executable" -e "shared object" | \
+	grep -e "ELF" | cut -f 1 -d ':' | \
+	xargs strip --strip-unneeded 2> /dev/null || true
 
 # Compress and if needed symlink the man pages:
 if [ -d $PKG/usr/man ]; then

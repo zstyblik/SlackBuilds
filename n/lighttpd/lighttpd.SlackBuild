@@ -90,12 +90,9 @@ make install DESTDIR="${PKG}" || exit 3
 mkdir -p "${PKG}/etc/lighttpd"
 cp "${CWD}/lighttpd.conf.default" "${PKG}/etc/lighttpd/"
 
-( cd "${PKG}"
-	find . | xargs file | grep "executable" | grep ELF | \
-		cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-	find . | xargs file | grep "shared object" | grep ELF | \
-		cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
-)
+find "${PKG}" | xargs file | grep -e "executable" -e "shared object" | \
+	grep -e "ELF" | cut -f 1 -d ':' | \
+	xargs strip --strip-unneeded 2> /dev/null || true
 
 mkdir -p "${PKG}/install"
 cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"

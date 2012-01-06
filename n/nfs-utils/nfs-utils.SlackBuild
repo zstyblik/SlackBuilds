@@ -117,8 +117,9 @@ mkdir -p $PKG/sbin
 mv $PKG/usr/sbin/rpc.statd $PKG/sbin
 ( cd $PKG/usr/sbin ; ln -sf ../../sbin/rpc.statd . )
 
-find $PKG | xargs file | grep -e "executable" -e "shared object" \
-  | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+find "${PKG}" | xargs file | grep -e "executable" -e "shared object" | \
+	grep -e "ELF" | cut -f 1 -d ':' | \
+	xargs strip --strip-unneeded 2> /dev/null || true
 
 mkdir -p $PKG/usr/doc/nfs-utils-$VERSION
 cp -a \
