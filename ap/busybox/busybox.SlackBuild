@@ -1,0 +1,177 @@
+#!/bin/sh
+
+# Copyright 2008, 2009  Patrick J. Volkerding, Sebeka, Minnesota, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Modified 2010/Apr/14 @ Zdenek Styblik
+set -e
+set -u
+
+VERSION=${VERSION:-0.0}
+ARCH=${ARCH:-$(uname -m)}
+NUMJOBS=${NUMJOBS:-" -j7 "}
+BUILD=${BUILD:-1}
+AUTHOR=""
+APPL="busybox"
+TRSFX="tar.bz2"
+# Note: re-use of old .config seems to be unreliable if nothing less
+BUSYBOXCONFIG=${BUSYBOXCONFIG:-''}
+BUSYBOXSITE=${BUSYBOXSITE:-'http://www.busybox.net/'}
+BUSYFIXES=${BUSYFIXES:-'y'}
+
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG="${TMP}/package-${APPL}"
+
+if [ "${VERSION}" = '0.0' ] || [ -z "${VERSION}" ]; then
+	VERSION=$(wget "${BUSYBOXSITE}/downloads/" -O - 2>/dev/null | \
+		awk -F'>' 'BEGIN { versionMax=""; arrVer[0] = 0 } \
+		{ if ($0 !~ /busybox-[0-9\.]+\.tar\.bz2/) { next } \
+		ibeg = index($0, ">busybox-"); \
+		part = substr($0, ibeg+9); \
+		iend = index(part, ".tar.bz2<"); \
+		if (iend == 0) { next } \
+		part = substr(part, 0, iend-1); \
+		split(part, arrPart, "."); \
+		for (item in arrPart) { \
+			if (arrPart[item] > arrVer[item]) { versionMax = part; break } \
+		} \
+		} \
+		END { print versionMax }'
+	)
+fi # if [ "${VERSION}" = '0.0' ] ...
+
+if [ -e "busybox-${VERSION}.config" ]; then
+	BUSYBOXCONFIG="busybox-${VERSION}.config"
+else
+	printf "Config file for Busybox v%s not found.\n" "${VERSION}"
+	exit 201
+fi # if [ -e "busybox... ]
+
+if [ ! -e "busybox-${VERSION}.${TRSFX}" ]; then
+	wget "http://www.busybox.net/downloads/busybox-${VERSION}.${TRSFX}"
+fi # if [ ! -e "busybox-${VERSION}.${TRSFX}" ]
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
+
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
+
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS=""
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
+rm -rf "${PKG}"
+mkdir -p "${TMP}" "${PKG}"
+
+cd "${TMP}"
+rm -rf "${APPL}-${VERSION}"
+tar xvf "${CWD}/${APPL}-${VERSION}.${TRSFX}" || exit 1
+cd "${APPL}-${VERSION}"
+# Apply additional fixes/patches, if 1] told to do so 2] they exist
+if [ "${BUSYFIXES}" = 'y' ] \
+	&& wget "${BUSYBOXSITE}/downloads/fixes-${VERSION}/" \
+	-O /dev/null 2>/dev/null; then
+	for PATCH in $(wget "${BUSYBOXSITE}/downloads/fixes-${VERSION}/" \
+		-O - 2>/dev/null | awk -F'>' '{ \
+		if ($0 !~ /.patch/) { next } \
+		sPos=index($0, "href=\""); \
+		if (sPos == 0) { next }; \
+		strPatch = substr($0, sPos+6); \
+		ePos = index(strPatch, "\">");
+		if (ePos == 0) { next }; \
+		strPatch = substr(strPatch, 0, ePos-1); \
+		print strPatch; }'); do
+		wget "${BUSYBOXSITE}/downloads/fixes-${VERSION}/${PATCH}" 2>/dev/null
+		printf "Applying patch '%s'.\n" "${PATCH}"
+		cat "${PATCH}" | patch -p1
+	done # for PATCH
+fi # if [ BUSYFIXES = 'y' ] && ...
+
+if [ -e "./.config" ]; then
+	mv ./.config ./.config.org
+fi
+cp "${CWD}/${BUSYBOXCONFIG}" .config
+
+chown -R root:root .
+find . \
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
+
+printf "Building ...\n"
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+make ${NUMJOBS} ${MAKEFLAGS} || make ${MAKEFLAGS} || exit 2
+
+cp ./busybox "${PKG}/"
+
+find "${PKG}" | xargs file | grep -e "executable" -e "shared object" | \
+	grep -e "ELF" | cut -f 1 -d ':' | \
+	xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p "${PKG}/install"
+cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"
+if [ -e "${CWD}/doinst.sh" ]; then
+	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh"
+fi
+
+# Compress and link manpages, if any:
+if [ -d $PKG/usr/man ]; then
+	( cd $PKG/usr/man
+		for manpagedir in $(find . -type d -name "man*") ; do
+			( cd $manpagedir
+				for eachpage in $( find . -type l -maxdepth 1) ; do
+					ln -s $( readlink $eachpage ).gz $eachpage.gz
+					rm $eachpage
+				done
+				gzip -9 *.*
+			)
+		done
+	)
+fi # if [ -d $PKG/usr/man ]
+# Compress info pages
+if [ -d $PKG/usr/info ]; then
+	rm -rf $PKG/usr/info/dir
+	gzip -9 $PKG/usr/info/*
+fi # if [ -d $PKG/usr/info ]
+
+# Build the package:
+cd "${PKG}"
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
+
+md5sum "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+

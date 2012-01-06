@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+       |-----handy-ruler------------------------------------------------------|
+busybox: BusyBox: The Swiss Army Knife of Embedded Linux
+busybox: 
+busybox: BusyBox combines tiny versions of many common UNIX utilities
+busybox: into a single small executable. It provides replacements for most of
+busybox: the utilities you usually find in GNU fileutils, shellutils, etc. The
+busybox: utilities in BusyBox generally have fewer options than their
+busybox: full-featured GNU cousins.
+busybox: 
+busybox: Project homepage: http://www.busybox.net/
+busybox: License: GNU/GPLv2
+busybox: 
