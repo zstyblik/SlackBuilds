@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 set -u
-set -x
 
 VERSION=${VERSION:-'v3.6c'}
 ARCH=${ARCH:-$(uname -m)}
