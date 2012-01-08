@@ -2,11 +2,12 @@
 set -e
 set -u
 PKGNAME=util-linux
-PKGVER=2.19.1
+PKGVER=2.19
 
-if [ -z $DISTPKG ] || [ -z $SBDIR ]; then
-	exit 254
-fi
+if [ ! -d "./${SLACKVER}" ]; then
+	printf "%s sources not found in './%s'.\n" $PKGNAME $SLACKVER
+	exit 1
+fi # if [ ! -d "./${SLACKVER}" ]
 
 ./${PKGNAME}.SlackBuild || exit $?
 
