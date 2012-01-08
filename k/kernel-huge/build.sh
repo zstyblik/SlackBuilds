@@ -12,8 +12,7 @@ if [ ! -e $CWD/linux-${KERNNAME}-${KVERSION}.config ]; then
 	exit 1
 fi
 
-cd /usr/src/
-if [ ! -e "linux-${KVERSION}.tar.bz2" ]; then
+if [ ! -e "${CWD}/linux-${KVERSION}.tar.bz2" ]; then
 	KVERPART=$(printf "%s" "${KVERSION}" | cut -d '.' -f 1-2)
 	if [ -z "${KVERPART}" ] || ! printf "%s" "${KVERPART}" | grep -e '[0-9]\.[0-9]'; then
 		printf "KVERSION '%s' is garbage. Expected X.Y.Z...\n" "${KVERSION}"
@@ -26,6 +25,8 @@ if [ ! -e "linux-${KVERSION}.tar.bz2" ]; then
 	wget \
 		"http://www.kernel.org/pub/linux/kernel/v${KVERPART}/linux-${KVERSION}.tar.bz2"
 fi # if [ ! -e "linux-${KVERSION}.tar.bz2" ]
+
+cd /usr/src/
 tar vjxf $CWD/linux-${KVERSION}.tar.bz2 || exit 1
 cd linux-${KVERSION} || exit 2
 make clean
