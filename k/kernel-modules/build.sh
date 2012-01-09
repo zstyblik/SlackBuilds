@@ -24,7 +24,7 @@ fi;
 
 make modules ${NUMJOBS} || make modules || exit 20
 # Note: Firmware installation is required by modules. If not fulfilled, fail.
-make firmware_install INSTALL_FW_PATH=${PKG} || exit 25
+make firmware_install INSTALL_FW_PATH=${PKG}/lib/firmware || exit 25
 make modules_install INSTALL_MOD_PATH=${PKG} || exit 30
 #
 rm -rf "${PKG}/lib/firmware"
