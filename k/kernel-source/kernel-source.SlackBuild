@@ -32,6 +32,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="kernel-source"
 TRSFX="tar.bz2"
+KSOURCE=${KSOURCE:-"$(pwd)/../kernel-huge/linux-${VERSION}.${TRSFX}"}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -60,10 +61,9 @@ if [ -z "${MAKEFLAGS}" ]; then
 	MAKEFLAGS=""
 fi # if [ -z "${MAKEFLAGS}" ]
 #
-if [ ! -e ../kernel-huge/linux-${VERSION}.$TRSFX ]; then
-	echo "I couldn't find packed linux source \
-	'../kernel-huge/linux-${VERSION}.$TRSFX'"
-	exit 20;
+if [ ! -e "${KSOURCE}" ]; then
+	printf "I couldn't find packed linux source '%s'.\n" "${KSOURCE}"
+	exit 20
 fi
 
 rm -rf $PKG
@@ -76,12 +76,13 @@ mkdir $PKG/usr
 mkdir $PKG/usr/src/
 cd $PKG/usr/src/
 rm -rf linux-$VERSION
-tar xvf $CWD/../kernel-huge/linux-$VERSION.$TRSFX || exit 1
+printf "Extracting '%s'\n" "${KSOURCE}"
+tar xf "${KSOURCE}" || exit 1
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 if [ -e $CWD/doinst.sh ]; then
-	cat $CWD/doinst.sh | sed "s/LINUXVER/${VERSION}/g" > $PKG/install/doinst.sh
+	cat $CWD/doinst.sh | sed -e "s/LINUXVER/${VERSION}/g" > $PKG/install/doinst.sh
 fi
 
 # Build the package:
