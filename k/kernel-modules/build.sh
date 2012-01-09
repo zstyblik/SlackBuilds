@@ -40,6 +40,6 @@ export VERSION
 # clean-up; recover modules
 if [ -d /lib/modules/${KVERSION}.org ]; then
 	rm -rf /lib/modules/${KVERSION}
-	mv /lib/modules/${KVERSION} /lib/modules/${KVERSION}.org || exit 35
+	mv /lib/modules/${KVERSION}.org /lib/modules/${KVERSION} || exit 35
 fi
 
