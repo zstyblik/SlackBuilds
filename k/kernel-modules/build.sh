@@ -19,11 +19,15 @@ make modules || exit 20
 
 # save original modules, if any
 if [ -d /lib/modules/${KVERSION} ]; then
-	mv /lib/modules/${KVERSION}{,.org} || exit 25
+	mv /lib/modules/${KVERSION} /lib/modules/${KVERSION}.org || exit 25
 fi;
 
 make modules ${NUMJOBS} || make modules || exit 20
+# Note: Firmware installation is required by modules. If not fulfilled, fail.
+make firmware_install INSTALL_FW_PATH=${PKG} || exit 25
 make modules_install INSTALL_MOD_PATH=${PKG} || exit 30
+#
+rm -rf "${PKG}/lib/firmware"
 
 cd $CWD
 VERSION=$KVERSION
@@ -36,6 +40,6 @@ export VERSION
 # clean-up; recover modules
 if [ -d /lib/modules/${KVERSION}.org ]; then
 	rm -rf /lib/modules/${KVERSION}
-	mv /lib/modules/${KVERSION}{.org,} || exit 35
+	mv /lib/modules/${KVERSION} /lib/modules/${KVERSION}.org || exit 35
 fi
 
