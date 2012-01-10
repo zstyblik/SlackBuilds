@@ -29,6 +29,8 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="util-linux"
 TRSFX="tar.bz2"
+SLACKVER=${SLACKVER:-'slackware64-13.37'}
+SOURCES=${SOURCES:-"$(pwd)/${SLACKVER}"}
 
 ADJTIMEXVERS=1.23
 SETSERIALVERS=2.17
@@ -37,15 +39,23 @@ ZIPTOOLVERS=1.4.0
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG="${TMP}/package-${APPL}"
-SOURCES="$CWD/$SLACKVER"
 #
 LIBDIRSUFFIX=""
 SLKCFLAGS=${SLKCFLAGS:-""}
 SLKLDFLAGS=${SLKLDFLAGS:-""}
 
 if [ -z "${VERSION}" ]; then
-	VERSION=$(printf "%s" ${SOURCES}/util-linux*.tar.?z* | \
-		cut -d - -f 3  | rev | cut -f 3- -d . | rev)
+	UTILLNXTF=$(find "${SOURCES}" -name util-linux*.tar.?z* | sort | \
+		tail -n 1)
+	if [ -z "${UTILLNXTF}" ]; then
+		printf "util-linux tar file not found in '%s'.\n" "${SOURCES}"
+		exit 10
+	fi
+	VERSION=$(basename "${UTILLNXTF}" | cut -d '-' -f 3  | rev | \
+		cut -f 3- -d '.' | rev)
+else
+	UTILLNXTF=$(find "${SOURCES}" -name util-linux-${VERSION}.tar.?z* | sort | \
+		tail -n 1)
 fi
 
 if [ "${ARCH}" = "i486" ]; then
@@ -71,7 +81,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP || exit 1
 rm -rf util-linux-$VERSION
-tar xvf $SOURCES/util-linux-$VERSION.tar.?x* || exit 1
+tar xvf $UTILLNXTF || exit 1
 cd util-linux-$VERSION || exit 1
 chown -R root.root .
 find . \
@@ -79,7 +89,8 @@ find . \
  -exec chmod 755 {} \; -o \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
-
+#
+./autogen.sh
 # loop-AES patch
 bzcat $SOURCES/util-linux-2.19.1-20110510.diff.bz2 | patch -p1 || exit 1
 
