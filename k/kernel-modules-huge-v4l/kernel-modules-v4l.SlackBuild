@@ -22,8 +22,11 @@
 
 
 VERSION=${VERSION:-2.6.32.42}
+KERNNAME=${KERNNAME:-'huge'}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
+APPL="kernel-modules"
+AUTHOR=${AUTHOR:-""}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -82,6 +85,7 @@ EOF
 cd "${PKG}"
 /sbin/makepkg -l y -c n "${TMP}/kernel-modules-v4l-${VERSION}-${ARCH}-${BUILD}.txz"
 
-md5sum "${TMP}/kernel-modules-v4l-${VERSION}-${ARCH}-${BUILD}.txz" \
-	> "${TMP}/kernel-modules-v4l-${VERSION}-${ARCH}-${BUILD}.md5"
-
+pushd "${TMP}"
+md5sum "kernel-modules-v4l-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+popd

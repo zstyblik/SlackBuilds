@@ -165,3 +165,7 @@ EOF
 cd $PKG
 /sbin/makepkg -l y -c n $TMP/nfs-utils-$VERSION-$ARCH-$BUILD.txz
 
+pushd "${TMP}"
+md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+popd

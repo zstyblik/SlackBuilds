@@ -27,6 +27,8 @@
 VERSION=${VERSION:-2.6.32.42}
 ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
+AUTHOR=${AUTHOR:-''}
+APPL="kernel-modules"
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -86,6 +88,7 @@ EOF
 cd $PKG
 /sbin/makepkg -l y -c n "${TMP}/kernel-modules-${VERSION}-${ARCH}-${BUILD}.txz"
 
-md5sum "${TMP}/kernel-modules-${VERSION}-${ARCH}-${BUILD}.txz" > \
-	"${TMP}/kernel-modules-${VERSION}-${ARCH}-${BUILD}.md5"
-
+pushd "${TMP}"
+md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+popd

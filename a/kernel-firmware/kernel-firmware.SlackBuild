@@ -30,6 +30,8 @@ PKG=$TMP/package-kernel-firmware
 VERSION=${VERSION:-2.6.32.40}
 ARCH=${ARCH:-noarch}
 BUILD=${BUILD:-1}
+AUTHOR=${AUTHOR:-""}
+APPL="kernel-firmware"
 
 rm -rf $PKG
 mkdir -p $TMP $PKG
@@ -47,6 +49,7 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 cd $PKG
 /sbin/makepkg -l y -c n "${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.txz"
 
-md5sum "${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.txz" > \
-	"${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.md5"
-
+pushd "${TMP}"
+md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+popd

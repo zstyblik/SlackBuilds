@@ -28,6 +28,8 @@ VERSION=${VERSION:-2.6.32.42}
 ARCH=${ARCH:-$(uname -m)}
 KARCH=${KARCH:-x86}
 BUILD=${BUILD:-1}
+APPL="kernel-${KERNNAME}"
+AUTHOR=${AUTHOR:-''}
 
 TMP=${TMP:-/tmp}
 CWD=$(pwd)
@@ -100,6 +102,7 @@ cat $CWD/slack-desc > $PKG/install/slack-desc
 cd $PKG
 /sbin/makepkg -l y -c n $TMP/kernel-${KERNNAME}-${VERSION}-${ARCH}-${BUILD}.txz
 
-md5sum "${TMP}/kernel-${KERNNAME}-${VERSION}-${ARCH}-${BUILD}.txz" > \
-	"${TMP}/kernel-${KERNNAME}-${VERSION}-${ARCH}-${BUILD}.md5"
-
+pushd "${TMP}"
+md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
+	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+popd
