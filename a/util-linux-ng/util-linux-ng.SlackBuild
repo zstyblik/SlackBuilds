@@ -29,6 +29,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="util-linux-ng"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 ADJTIMEXVERS=${ADJTIMEXVERS:-'1.23'}
 SETSERIALVERS=${SETSERIALVERS:-'2.17'}
@@ -91,10 +92,10 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP || exit 1
 rm -rf $APPL-$VERSION
-tar xvf $CWD/$APPL-$VERSION.tar.?z* || exit 1
+tar xvf $SOURCES/$APPL-$VERSION.tar.?z* || exit 1
 cd $APPL-$VERSION || exit 1
 
-cat $CWD/util-linux-ng-2.18-20100706.diff | patch -p1 || exit 1
+cat $SOURCES/util-linux-ng-2.18-20100706.diff | patch -p1 || exit 1
 
 chown -R root.root .
 find . \
@@ -118,7 +119,7 @@ find . \
 # Changing the fdisk -l output (this was done prior to util-linux-ng) broke
 # our installation scripts, so we have changed the name of partition type
 # 83 back to "Linux swap":
-zcat $CWD/util-linux-ng.fdisk-no-solaris.diff.gz | patch -p1 || exit 1
+zcat $SOURCES/util-linux-ng.fdisk-no-solaris.diff.gz | patch -p1 || exit 1
 
 CFLAGS="$SLKCFLAGS" \
 ./configure ${CONFIGUREFLAGS} || exit 1
@@ -157,11 +158,11 @@ chmod 755 $PKG/sbin/rdev
 # Build ziptool
 cd $TMP || exit 1
 rm -rf ziptool-$ZIPTOOLVERS
-tar xvf $CWD/ziptool-$ZIPTOOLVERS.tar.xz || exit 1
+tar xvf $SOURCES/ziptool-$ZIPTOOLVERS.tar.xz || exit 1
 cd ziptool-$ZIPTOOLVERS || exit 1
-zcat $CWD/ziptool-fix_build.patch.gz | patch -p1 || exit 1
+zcat $SOURCES/ziptool-fix_build.patch.gz | patch -p1 || exit 1
 mkdir scsi
-cat $CWD/scsi_ioctl.h > scsi/scsi_ioctl.h
+cat $SOURCES/scsi_ioctl.h > scsi/scsi_ioctl.h
 chown -R root:root .
 make || exit 1
 strip ziptool
@@ -175,7 +176,7 @@ cat ziptool.1.gz > $PKG/usr/man/man1/ziptool.1.gz
 # Build bsdstrings
 cd $TMP || exit 1
 rm -rf bsdstrings
-tar xvf $CWD/bsdstrings.tar.gz || exit 1
+tar xvf $SOURCES/bsdstrings.tar.gz || exit 1
 cd bsdstrings || exit 1
 make || exit 1
 strip strings
@@ -187,10 +188,10 @@ cat strings.1 | gzip -9c > $PKG/usr/man/man1/strings.1.gz
 # installing just the A series will not have a hostname (null):
 cd $TMP || exit 1
 rm -rf net-tools-1.60
-tar xvf $CWD/net-tools-1.60.tar.xz
+tar xvf $SOURCES/net-tools-1.60.tar.xz
 cd net-tools-1.60
-zcat $CWD/net-tools_1.60-19.diff.gz | patch -p1 || exit
-zcat $CWD/net-tools.diff.gz | patch -p1 || exit
+zcat $SOURCES/net-tools_1.60-19.diff.gz | patch -p1 || exit
+zcat $SOURCES/net-tools.diff.gz | patch -p1 || exit
 make
 make hostname
 strip hostname
@@ -212,10 +213,10 @@ done
 # Build adjtimex
 cd $TMP || exit 1
 rm -rf adjtimex-$ADJTIMEXVERS
-tar xvf $CWD/adjtimex_${ADJTIMEXVERS}.orig.tar.gz || exit 1
+tar xvf $SOURCES/adjtimex_${ADJTIMEXVERS}.orig.tar.gz || exit 1
 cd adjtimex-$ADJTIMEXVERS || exit 1
 chown -R root:root .
-zcat $CWD/adjtimex_1.23-1.diff.gz | patch -p1 || exit 1
+zcat $SOURCES/adjtimex_1.23-1.diff.gz | patch -p1 || exit 1
 CFLAGS=-O2 ./configure --prefix=/usr || exit 1
 make || exit 1
 strip adjtimex
@@ -229,11 +230,11 @@ cp -a COPYING COPYRIGHT README README.ru adjtimex.lsm \
 # Build setserial
 cd $TMP || exit 1
 rm -rf setserial-$SETSERIALVERS
-tar xvf $CWD/setserial-$SETSERIALVERS.tar.gz || exit 1
+tar xvf $SOURCES/setserial-$SETSERIALVERS.tar.gz || exit 1
 cd setserial-$SETSERIALVERS || exit 1
 chown -R root:root .
-zcat $CWD/setserial-rc.serial.diff.gz | patch -E -p1 --verbose || exit 1
-zcat $CWD/setserial-undef_TIOCGHAYESESP.diff.gz | patch -E -p1 --verbose || exit 1
+zcat $SOURCES/setserial-rc.serial.diff.gz | patch -E -p1 --verbose || exit 1
+zcat $SOURCES/setserial-undef_TIOCGHAYESESP.diff.gz | patch -E -p1 --verbose || exit 1
 # The original config.{guess,sub} do not work on x86_64
 cp -p /usr/share/libtool/config/config.{guess,sub} .
 ./configure --prefix=/usr || exit 1

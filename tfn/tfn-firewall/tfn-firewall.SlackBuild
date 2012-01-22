@@ -32,6 +32,7 @@ BUILD=${BUILD:-2}
 AUTHOR=""
 APPL="tfn-firewall"
 TRSFX=""
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}

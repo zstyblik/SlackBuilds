@@ -32,6 +32,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="areca-cli"
 TRSFX=""
+SOURCES=${SOURCES:-$(pwd)}
 
 ARCHIVENAME="1.83_091103"
 

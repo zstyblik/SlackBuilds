@@ -34,6 +34,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="php"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -159,11 +160,11 @@ fi
 
 cd $TMP
 rm -rf php-$VERSION
-tar xvf $CWD/php-$VERSION.tar.?z* || exit 1
+tar xvf $SOURCES/php-$VERSION.tar.?z* || exit 1
 cd php-$VERSION
 
-zcat $CWD/php.gmp5.diff.gz | patch -p1 --verbose || exit 1
-zcat $CWD/php.gd_libpng-1.4.diff.gz | patch -p1 --verbose || exit 1
+zcat $SOURCES/php.gmp5.diff.gz | patch -p1 --verbose || exit 1
+zcat $SOURCES/php.gd_libpng-1.4.diff.gz | patch -p1 --verbose || exit 1
 
 # Add missing(?) PEAR modules back:
 if [ -d php-$VERSION/pear/packages ]; then
@@ -174,7 +175,7 @@ if [ -d php-$VERSION/pear/packages ]; then
 fi
 
 if [ "$ARCH" = "s390" ]; then
-	zcat $CWD/php.configure.s390.diff.gz | patch -p1 || exit
+	zcat $SOURCES/php.configure.s390.diff.gz | patch -p1 || exit
 fi
 
 # Fixup perms/owners:

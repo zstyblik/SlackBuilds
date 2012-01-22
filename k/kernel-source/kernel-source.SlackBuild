@@ -32,7 +32,8 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="kernel-source"
 TRSFX="tar.bz2"
-KSOURCE=${KSOURCE:-"$(pwd)/../kernel-huge/linux-${VERSION}.${TRSFX}"}
+SOURCES=${SOURCES:-$(pwd)}
+KSOURCE=${KSOURCE:-"${SOURCES}/linux-${VERSION}.${TRSFX}"}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}

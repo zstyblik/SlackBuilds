@@ -32,6 +32,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="kernel-headers"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}

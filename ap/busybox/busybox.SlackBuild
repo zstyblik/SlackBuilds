@@ -31,6 +31,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="busybox"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 # Note: re-use of old .config seems to be unreliable if nothing less
 BUSYBOXCONFIG=${BUSYBOXCONFIG:-''}
 BUSYBOXSITE=${BUSYBOXSITE:-'http://www.busybox.net/'}
@@ -97,7 +98,7 @@ mkdir -p "${TMP}" "${PKG}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}"
-tar xvf "${CWD}/${APPL}-${VERSION}.${TRSFX}" || exit 1
+tar xvf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" || exit 1
 cd "${APPL}-${VERSION}"
 # Apply additional fixes/patches, if 1] told to do so 2] they exist
 if [ "${BUSYFIXES}" = 'y' ] \

@@ -27,6 +27,7 @@ APPL=network-scripts
 VERSION=${VERSION:-13.0}
 ARCH=noarch
 BUILD=${BUILD:-3}
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}

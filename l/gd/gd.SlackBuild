@@ -31,6 +31,7 @@ BUILD=${BUILD:-4}
 AUTHOR=""
 APPL="gd"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -72,10 +73,10 @@ mkdir -p "${TMP}" "${PKG}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}"
-tar xvf $CWD/${APPL}-$VERSION.tar.?z* || exit 1
+tar xvf $SOURCES/${APPL}-$VERSION.tar.?z* || exit 1
 cd "${APPL}-${VERSION}"
 
-zcat $CWD/gd.png14.diff.gz | patch -p1 --verbose || exit 1
+zcat $SOURCES/gd.png14.diff.gz | patch -p1 --verbose || exit 1
 
 chown -R root:root .
 find . \

@@ -27,6 +27,7 @@ ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 APPL="kernel-modules"
 AUTHOR=${AUTHOR:-""}
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}

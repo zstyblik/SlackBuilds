@@ -31,6 +31,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="clamav"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -73,7 +74,7 @@ mkdir -p "${TMP}" "${PKG}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}"
-tar xvf "${CWD}/${APPL}-${VERSION}.${TRSFX}" || exit 1
+tar xvf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" || exit 1
 cd "${APPL}-${VERSION}"
 
 chown -R root:root .

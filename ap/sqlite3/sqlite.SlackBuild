@@ -31,6 +31,7 @@ NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
 AUTHOR=""
 APPL=sqlite
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -72,7 +73,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 cd $TMP
 rm -rf $APPL-$VERSION
-tar xvf $CWD/$APPL-$VERSION.tar.?z* || exit 1
+tar xvf $SOURCES/$APPL-$VERSION.tar.?z* || exit 1
 cd $APPL-$VERSION || exit 1
 
 chown -R root:root .

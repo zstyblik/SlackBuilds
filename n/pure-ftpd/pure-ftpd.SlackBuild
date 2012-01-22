@@ -31,6 +31,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="pure-ftpd"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -81,10 +82,10 @@ mkdir -p "${TMP}" "${PKG}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}"
-tar xvf "${CWD}/${APPL}-${VERSION}.${TRSFX}" || exit 1
+tar xvf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" || exit 1
 cd "${APPL}-${VERSION}"
 #
-cat $CWD/pure_ftpd_supplementary_groups_v2_${VERSION}.patch | \
+cat $SOURCES/pure_ftpd_supplementary_groups_v2_${VERSION}.patch | \
 patch -p1 || exit 20
 #
 chown -R root:root .

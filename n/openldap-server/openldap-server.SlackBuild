@@ -32,6 +32,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="openldap-server"
 TRSFX="tgz"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -73,7 +74,7 @@ mkdir -p "${TMP}" "${PKG}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}"
-tar xvf "${CWD}/openldap-${VERSION}.${TRSFX}" || exit 1
+tar xvf "${SOURCES}/openldap-${VERSION}.${TRSFX}" || exit 1
 cd "openldap-${VERSION}"
 
 if [ "$ARCH" = "x86_64" ]; then

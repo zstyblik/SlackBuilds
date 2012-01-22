@@ -31,6 +31,7 @@ BUILD=${BUILD:-2}
 AUTHOR=""
 APPL="cairo"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -95,7 +96,7 @@ mkdir -p "${TMP}" "${PKG}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}"
-tar xvf ${CWD}/${APPL}-${VERSION}.?z* || exit 1
+tar xvf ${SOURCES}/${APPL}-${VERSION}.?z* || exit 1
 cd "${APPL}-${VERSION}"
 
 chown -R root:root .
@@ -107,7 +108,7 @@ find . \
 
 # Thanks to Ubuntu for this, but I found it at Gentoo's bugtracker
 # http://bugs.gentoo.org/show_bug.cgi?id=336696
-zcat $CWD/cairo-1.10.0-buggy_gradients.patch.gz | patch -p1 || exit 1
+zcat $SOURCES/cairo-1.10.0-buggy_gradients.patch.gz | patch -p1 || exit 1
 
 printf "Building ...\n"
 LDFLAGS="$SLKLDFLAGS" \

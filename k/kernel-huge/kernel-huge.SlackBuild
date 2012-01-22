@@ -30,6 +30,7 @@ KARCH=${KARCH:-x86}
 BUILD=${BUILD:-1}
 APPL="kernel-${KERNNAME}"
 AUTHOR=${AUTHOR:-''}
+SOURCES=${SOURCES:-$(pwd)}
 
 TMP=${TMP:-/tmp}
 CWD=$(pwd)

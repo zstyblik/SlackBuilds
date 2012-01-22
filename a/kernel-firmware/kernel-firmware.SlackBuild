@@ -31,6 +31,7 @@ VERSION=${VERSION:-2.6.32.40}
 ARCH=${ARCH:-noarch}
 BUILD=${BUILD:-1}
 AUTHOR=${AUTHOR:-""}
+SOURCES=${SOURCES:-$(pwd)}
 APPL="kernel-firmware"
 
 rm -rf $PKG

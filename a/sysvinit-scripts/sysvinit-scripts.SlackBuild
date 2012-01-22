@@ -31,6 +31,7 @@ BUILD=${BUILD:-43}
 AUTHOR=""
 APPL="package-sysvinit-scripts"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}

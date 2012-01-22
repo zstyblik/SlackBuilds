@@ -34,6 +34,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="httpd"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -90,7 +91,7 @@ fi # if [ -z "${MAKEFLAGS}" ]
 #
 cd $TMP
 rm -rf ${APPL}-${VERSION}
-tar xvf $CWD/${APPL}-$VERSION.tar.bz2 || exit 1
+tar xvf $SOURCES/${APPL}-$VERSION.tar.bz2 || exit 1
 cd ${APPL}-$VERSION
 
 # Make sure ownerships and permissions are sane:
@@ -107,7 +108,7 @@ find . \
 # many scripts (especially PHP ones) are not multithread safe.
 #
 # I'd leave this option the way is it on any production box that's keeping up
-# with HTTP requests.  No reason to chance it, IMHO.
+# with HTTP requests.  No reason to change it, IMHO.
 
 zcat $CWD/config.layout.diff.gz | \
 	sed -e "s#lib/httpd#lib${LIBDIRSUFFIX}/httpd#" | \

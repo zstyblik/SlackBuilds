@@ -32,6 +32,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="pango"
 TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -73,7 +74,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG/usr
 cd $TMP
 rm -rf "${APPL}-${VERSION}"
-tar xvf $CWD/${APPL}-${VERSION}.tar.?z* || exit 1
+tar xvf $SOURCES/${APPL}-${VERSION}.tar.?z* || exit 1
 
 cd "${APPL}-${VERSION}"
 
@@ -86,7 +87,7 @@ find . \
 
 # Fix for x86_64 (does not hurt the other archs but note that we will start
 # using /etc/pango/$host instead of /etc/pango/ now):
-zcat $CWD/pango.etc.host.location.diff.gz | patch -p1 --verbose || exit 1
+zcat $SOURCES/pango.etc.host.location.diff.gz | patch -p1 --verbose || exit 1
 
 # Autoconf changes linux to linux-gnu.
 # Our host is $ARCH-slackware-linux not $ARCH-slackware-linux-gnu:

@@ -31,6 +31,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="libevent"
 TRSFX="tar.gz"
+SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
@@ -67,7 +68,7 @@ mkdir -p "${TMP}" "${PKG}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}-stable"
-tar xvf "${CWD}/${APPL}-${VERSION}-stable.${TRSFX}" || exit 1
+tar xvf "${SOURCES}/${APPL}-${VERSION}-stable.${TRSFX}" || exit 1
 cd "${APPL}-${VERSION}-stable"
 
 chown -R root:root .

@@ -32,6 +32,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="mailman"
 TRSFX="tgz"
+SOURCES=${SOURCES:-$(pwd)}
 
 MAILMANHOME=${MAILMANHOME:-"/var/lib/mailman/"}
 
@@ -82,7 +83,7 @@ chmod a+rx,g+ws "${MAILMANHOME}"
 
 cd "${TMP}"
 rm -rf "${APPL}-${VERSION}"
-tar xvf "${CWD}/${APPL}-${VERSION}.${TRSFX}" || exit 1
+tar xvf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" || exit 1
 cd "${APPL}-${VERSION}"
 
 chown -R root:root .
