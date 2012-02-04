@@ -85,8 +85,8 @@ rm -rf "${APPL}-${VERSION}"
 tar xvf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" || exit 1
 cd "${APPL}-${VERSION}"
 #
-cat $SOURCES/pure_ftpd_supplementary_groups_v2_${VERSION}.patch | \
-patch -p1 || exit 20
+$(cat $SOURCES/pure_ftpd_supplementary_groups_v2_${VERSION}.patch | \
+	patch -p1) || exit 20
 #
 chown -R root:root .
 find . \
