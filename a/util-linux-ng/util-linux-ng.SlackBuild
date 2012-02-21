@@ -315,6 +315,13 @@ cd $PKG
 /sbin/makepkg -l y -c n $TMP/$APPL-$VERSION-$ARCH-$BUILD.txz
 
 pushd "${TMP}"
-md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
-	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
+MD5SUM=$(md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" | \
+	cut -d ' ' -f 1)
 popd
+
+cat > "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.pkgdesc"<<HERE
+APPL ${APPL}
+VERSION ${VERSION}
+CHECKSUM MD5#${MD5SUM}
+HERE
+# EOF

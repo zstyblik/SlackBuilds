@@ -144,9 +144,17 @@ fi # if [ -d $PKG/usr/info ]
 cd "${PKG}"
 makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
 
-pushd "${TMP}"
-md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" > \
-	"${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.md5"
-popd
 # Clean-up
 rm -Rf ${MAILMANHOME} 2>/dev/null
+
+pushd "${TMP}"
+MD5SUM=$(md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" | \
+	cut -d ' ' -f 1)
+popd
+
+cat > "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.pkgdesc"<<HERE
+APPL ${APPL}
+VERSION ${VERSION}
+CHECKSUM MD5#${MD5SUM}
+HERE
+# EOF
