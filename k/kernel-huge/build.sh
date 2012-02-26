@@ -6,13 +6,15 @@ CWD=$(pwd)
 KVERSION=${VERSION:-"2.6.32.42"}
 KERNNAME=${KERNNAME:-"huge"}
 NUMJOBS=${NUMJOBS:-"-j7"}
+SOURCES=${SOURCES:-$(pwd)}
 
 if [ ! -e $CWD/linux-${KERNNAME}-${KVERSION}.config ]; then
-	echo "Kernel config not found."
+	printf "Kernel config '%s/linux-%s-%s.config' not \
+found.\n" "${CWD}" "${KERNNAME}" "${KVERSION}"
 	exit 1
 fi
 
-if [ ! -e "${CWD}/linux-${KVERSION}.tar.bz2" ]; then
+if [ ! -e "${SOURCES}/linux-${KVERSION}.tar.bz2" ]; then
 	KVERPART=$(printf "%s" "${KVERSION}" | cut -d '.' -f 1-2)
 	if [ -z "${KVERPART}" ] || ! printf "%s" "${KVERPART}" | grep -e '[0-9]\.[0-9]'; then
 		printf "KVERSION '%s' is garbage. Expected X.Y.Z...\n" "${KVERSION}"
@@ -27,7 +29,7 @@ if [ ! -e "${CWD}/linux-${KVERSION}.tar.bz2" ]; then
 fi # if [ ! -e "linux-${KVERSION}.tar.bz2" ]
 
 cd /usr/src/
-tar vjxf $CWD/linux-${KVERSION}.tar.bz2 || exit 1
+tar vjxf $SOURCES/linux-${KVERSION}.tar.bz2 || exit 1
 cd linux-${KVERSION} || exit 2
 make clean
 cp $CWD/linux-${KERNNAME}-${KVERSION}.config .config || exit 3
