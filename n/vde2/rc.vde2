@@ -1,0 +1,149 @@
+#!/bin/sh
+# 2012/Mar/10 @ Zdenek Styblik
+# Desc: VDE v2 rc script
+set -e
+set -u
+# Defaults
+VDECFG="/etc/vde2/vswitches/"
+RUNDIR="/var/run/vde2/"
+
+print_help() 
+{
+	cat <<EHELP
+$0: VDE v2 run-init control script
+
+Usage: $0 <start|stop> [vde_switch_name]
+
+Examples:
+  $0 start - start all defined VDE switches
+  $0 stop  - stop all defined VDE switches
+  $0 start switch1 - start only 'switch1'
+  $0 stop switch1  - stop only 'switch1'
+EHELP
+} # print_help
+
+vde2_start() 
+{
+	if [ ! -d "${VDECFG}" ]; then
+		printf "VDE config directory '%s' doesn't exist.\n" "${VDECFG}" 1>&2
+		return 1
+	fi
+	for CFGFILE in $(find "${VDECFG}" -name \*.cfg); do
+		VDESWI=$(basename "${CFGFILE}" .cfg)
+		vde2_start_switch "${VDESWI}"
+	done
+} # vde2_start
+
+vde2_start_switch() 
+{
+	VDESWI=${1:-''}
+	if [ -z "${VDESWI}" ]; then
+		printf "Name of VDE switch can't be empty.\n" 1>&2
+		return 1
+	fi
+	# Defaults
+	DATASOCK="${RUNDIR}/vde.${VDESWI}"
+	MGMTMODE=660
+	MGMTSOCK="${RUNDIR}/vde.${VDESWI}.sock"
+	PIDFILE="${RUNDIR}/vde.${VDESWI}.pid"
+	if [ ! -r "${VDECFG}/${VDESWI}.cfg" ]; then
+		printf "Configuration file '%s' doesn't seem to exist.\n"\
+			"${VDECFG}/${VDESWI}.cfg" 1>&2
+		return 1
+	fi
+	. "${VDECFG}/${VDESWI}.cfg"
+	if [ -d "${DATASOCK}" ] || [ -a "${MGMTSOCK}" ] || [ -a "${PIDFILE}" ]; then
+		printf "It seems VDE switch '%s' is either already up or stalled files?\n" \
+			"${VDESWI}" 1>&2
+		return 1
+	fi
+	if ! vde_switch \
+		-d \
+		-s "${DATASOCK}" \
+		--mgmt "${MGMTSOCK}" \
+		--mgmtmode "${MGMTMODE}" \
+		-p "${PIDFILE}" \
+		-t "${TAP}" ;
+	then
+		printf "VDE switch '%s' start failed.\n" "${VDESWI}"
+		return 1
+	else
+		printf "VDE switch '%s' start successful.\n" "${VDESWI}"
+		return 0
+	fi # if ! vde_switch
+} # vde2_start_switch
+
+vde2_stop() 
+{
+	if [ ! -d "${VDECFG}" ]; then
+		printf "VDE config directory '%s' doesn't exist.\n" "${VDECFG}" 1>&2
+		return 1
+	fi
+	for CFGFILE in $(find "${VDECFG}" -name \*.cfg); do
+		VDESWI=$(basename "${CFGFILE}" .cfg)
+		vde2_stop_switch "${VDESWI}"
+	done
+} # vde2_stop
+
+vde2_stop_switch() 
+{
+	VDESWI=${1:-''}
+	if [ -z "${VDESWI}" ]; then
+		printf "Name of VDE switch can't be empty.\n" 1>&2
+		return 1
+	fi
+	# Defaults
+	DATASOCK="${RUNDIR}/vde.${VDESWI}"
+	MGMTSOCK="${RUNDIR}/vde.${VDESWI}.sock"
+	PIDFILE="${RUNDIR}/vde.${VDESWI}.pid"
+	if [ ! -r "${VDECFG}/${VDESWI}.cfg" ]; then
+		printf "Configuration file '%s' doesn't seem to exist.\n"\
+			"${VDECFG}/${VDESWI}.cfg" 1>&2
+		return 1
+	fi
+	. "${VDECFG}/${VDESWI}.cfg"
+	if [ ! -r "${PIDFILE}" ]; then
+		printf "PID file '%s' doesn't seem to exist.\n" "${PIDFILE}" 1>&2
+		return 1
+	fi
+	if [ ! -a "${MGMTSOCK}" ]; then
+		printf "Management SOCK '%s' doesn't seem to exist.\n" "${MGMTSOCK}" 1>&2
+		return 1
+	fi
+	vdecmd -s "${MGMTSOCK}" shutdown || true
+	printf "VDE switch '%s' signaled to shutdown.\n" "${VDESWI}"
+} # vde2_stop_switch
+
+ARG1=${1:-''}
+case "${ARG1}" in
+	'start')
+		if [ $# -eq 2 ]; then
+			shift
+			vde2_start_switch $1
+		else
+			vde2_start
+		fi
+		;;
+	'stop')
+		if [ $# -eq 2 ]; then
+			shift
+			vde2_stop_switch $1
+		else
+			vde2_stop
+		fi
+		;;
+	'help')
+		print_help
+		;;
+	\?)
+		printf "Invalid option given.\n\n" 1>&2
+		print_help
+		exit 1
+		;;
+	*)
+		printf "Invalid option given.\n\n" 1>&2
+		print_help
+		exit 1
+		;;
+esac
+# EOF
