@@ -1,45 +1,58 @@
-#!/bin/bash
-LIBVIRTDPID=/var/run/libvirtd.pid
+#!/bin/sh
+LIBVIRTDPID="/var/run/libvirtd.pid"
 
-function help() {
-        cat <<'EOF'
+libvirt_start() {
+	if [ -f $LIBVIRTDPID ]; then
+		LVPIDOLD=$(cat $LIBVIRTDPID)
+		if [ -d "/proc/${LVPIDOLD}" ] && \
+			grep -q -e 'libvirtd' "/proc/${LVPIDOLD}/status"; then
+			printf "Libvirtd is running!\n"
+			exit 2
+		fi
+	fi
+	printf "Starting libvirtd ..."
+	if ! /usr/sbin/libvirtd -l -d -p ${LIBVIRTDPID} ; then
+		printf "failed.\n"
+		exit 3
+	fi
+	printf "done\n"
+} # libvirt_start
+
+libvirt_stop() {
+	if [ ! -f "${LIBVIRTDPID}" ]; then
+		printf "libvirtd PID file '%s' doesn't seem to exist.\n" "${LIBVIRTDPID}"
+		exit 1
+	fi
+	printf "Killing libvirtd ..."
+	if ! kill -s 2 $(cat $LIBVIRTDPID); then
+		printf "failed.\n"
+		exit 2
+	fi
+	rm -f "${LIBVIRTDPID}"
+	printf "done.\n"
+} # libvirt_stop
+
+print_help() {
+	cat <<EOF
 libvirtd control script
-rc.libvirtd use: (restart|start|stop)
+$0 use: (restart|start|stop)
 EOF
-        return 0
+	return 0
 } # function help
 
-function start() {
-        if [ -e $LIBVIRTDPID ]; then
-                LVPIDOLD=`cat $LIBVIRTDPID`
-                if [ -d /proc/${LVPIDOLD} ]; then
-                        grep -q -e 'libvirtd' /proc/${LVPIDOLD}/status && \
-                        { echo "Libvirtd is running!"; exit 2; }
-                fi;
-        fi
-        /usr/sbin/libvirtd -l -d -p ${LIBVIRTDPID} || \
-        { echo "There seems to be problem with libvirtd."; exit 3; }
-} # function start
-
-function stop() {
-        kill -s 2 `cat $LIBVIRTDPID` && rm -f $LIBVIRTDPID
-} # function stop
-
-case "$1" in
-        start)
-                start
-                break
-                ;;
-        stop)
-                stop
-                break
-                ;;
-        restart)
-                stop && start
-                break
-                ;;
-        *)
-                help
-                break
-                ;;
+ARG1=${1:-''}
+case "$ARG1" in
+	start)
+		libvirt_start
+		;;
+	stop)
+		stop
+		;;
+	restart)
+		libvirt_stop && libvirt_start
+		;;
+	*)
+		print_help
+		;;
 esac
+# EOF
