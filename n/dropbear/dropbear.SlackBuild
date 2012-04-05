@@ -49,7 +49,7 @@ if [ "${VERSION}" = '0.0' ] || [ -z "${VERSION}" ]; then
 		if (ibegin == 0 || iend == 0) { next } \
 		part = substr(part, 0, iend-1); \
 		print part; \
-	}')
+	}' | sort | tail -n 1)
 	VERSION=$(printf "%s" "${VERSION}" | cut -d '-' -f 2-)
 fi # if [ "${VERSION}" = '0.0' ] ...
 
