@@ -48,7 +48,7 @@ mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
 
 cd $PKG
-/sbin/makepkg -l y -c n "${TMP}/kernel-firmware-${VERSION}-noarch-${BUILD}.txz"
+/sbin/makepkg -l y -c n "${TMP}/kernel-firmware-${VERSION}-${ARCH}-${BUILD}.txz"
 
 pushd "${TMP}"
 MD5SUM=$(md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" | \
