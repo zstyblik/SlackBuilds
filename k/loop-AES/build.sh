@@ -40,10 +40,13 @@ find "${VAR_INSTALL_MOD_PATH}" -name modules.* -exec rm {} \;
 mkdir "${VAR_INSTALL_MOD_PATH}/install" 2>/dev/null
 
 cat "${CWD}/slack-desc" > "${VAR_INSTALL_MOD_PATH}/install/slack-desc" || \
-echo "slack-desc not found."
+	echo "slack-desc not found."
 
-cat "${CWD}/doinst.sh" > "${VAR_INSTALL_MOD_PATH}/install/doinst.sh" || \
-echo "doinst.sh not found."
+cat > "${VAR_INSTALL_MOD_PATH}/install/doinst.sh"<<EOD
+if [ -x sbin/depmod ]; then
+	chroot . /sbin/depmod -a "${KVERSION}" >/dev/null 2>&1
+fi
+EOD
 
 makepkg -l y -c n "${TMP}/${APPL}-${VERSION}-${KVERSION}${KERNNAME}-${ARCH}-${BUILD}.txz"
 
