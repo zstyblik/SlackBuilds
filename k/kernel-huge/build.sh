@@ -25,7 +25,8 @@ if [ ! -e "${SOURCES}/linux-${KVERSION}.tar.bz2" ]; then
 		KVERPART="3.0"
 	fi
 	wget \
-		"http://www.kernel.org/pub/linux/kernel/v${KVERPART}/linux-${KVERSION}.tar.bz2"
+		"http://www.kernel.org/pub/linux/kernel/v${KVERPART}/linux-${KVERSION}.tar.bz2"\
+		-O "${SOURCES}/linux-${KVERSION}.tar.bz2"
 fi # if [ ! -e "linux-${KVERSION}.tar.bz2" ]
 
 cd /usr/src/
