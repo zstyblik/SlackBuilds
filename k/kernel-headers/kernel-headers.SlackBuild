@@ -34,6 +34,8 @@ APPL="kernel-headers"
 TRSFX="tar.bz2"
 SOURCES=${SOURCES:-$(pwd)}
 
+KCONFIG=${KCONFIG:-''}
+
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
 PKG="${TMP}/package-${APPL}"
@@ -61,9 +63,26 @@ if [ -z "${MAKEFLAGS}" ]; then
 	MAKEFLAGS=""
 fi # if [ -z "${MAKEFLAGS}" ]
 #
+if [ -z "${KCONFIG}" ]; then
+	KCONFIG=$(dirname "${CWD}")"/kernel-huge/linux-huge-${VERSION}.config"
+fi
+if [ ! -r ${KCONFIG} ]; then
+	echo "File '${KCONFIG}' not found." 1>&2
+	exit 21
+fi
+#
 if [ ! -d /usr/src/linux-${VERSION} ]; then
-	echo "Directory '/usr/src/linux-${VERSION}/' doesn't seem to exist."
-	exit 20;
+        if [ ! -r "${SOURCES}/linux-${VERSION}.tar.bz2" ]; then
+		echo "File '${SOURCES}/linux-${VERSION}.tar.bz2' doesn't seem to exist." 1>&2
+		exit 22
+	fi
+	cd /usr/src/
+	printf "Extracting kernel sources...\n" 
+	tar xf "${SOURCES}/linux-${VERSION}.tar.bz2"
+else
+	cd /usr/src/linux-${VERSION}
+	make clean || true
+	make distclean || true
 fi
 
 rm -rf $PKG
@@ -72,13 +91,19 @@ mkdir -p $TMP $PKG
 cd /usr/src/linux-${VERSION}/
 
 printf "Building ...\n"
+make distclean || true
+cp "${KCONFIG}" ./.config
 
 mkdir $PKG/usr/
 mkdir $PKG/usr/include/
-make headers_install INSTALL_HDR_PATH=${PKG}/usr/
+mkdir $PKG/all
+make headers_install_all INSTALL_HDR_PATH=${PKG}/all/
+make headers_install INSTALL_HDR_PATH=${PKG}/usr
+cp -aprv "${PKG}/all/include/asm-$(printf "%s" "${ARCH}" | cut -d'_' -f1)"\
+	"${PKG}/usr/include/"
+rm -rf $PKG/all
 # DELETE rubbish
-find ${PKG} -name \.*install* -delete
-cd $PKG/usr/include/
+find $PKG -name \.*install* -delete
 
 mkdir -p $PKG/install
 cat $CWD/slack-desc > $PKG/install/slack-desc
