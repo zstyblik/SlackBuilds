@@ -32,7 +32,7 @@ BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="netcat-openbsd"
 TRSFX="tar.gz"
-SOURCES=${SOURCES:-$(pwd)}
+SOURCES=$(pwd)
 
 CWD=$(pwd)
 TMP=${TMP:-/tmp}
