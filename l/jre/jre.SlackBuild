@@ -23,8 +23,8 @@
 
 # Note that the slack-desc file mentions the JRE version (edit when upgrading)!
 
-VERSION=7u7
-DVER=1.7.0_07
+VERSION=7u25
+DVER=1.7.0_25
 ARCH=x86_64
 BUILD=${BUILD:-1}
 
