@@ -30,7 +30,7 @@ NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="vde2"
-TRSFX="tar.gz"
+TRSFX="tar.bz2"
 SOURCES=${SOURCES:-$(pwd)}
 
 CWD=$(pwd)
@@ -108,7 +108,7 @@ if [ -d $PKG/usr/man ]; then
 					ln -s $( readlink $eachpage ).gz $eachpage.gz
 					rm $eachpage
 				done
-				gzip -9 *.*
+				gzip -9 *.* || true
 			)
 		done
 	)
