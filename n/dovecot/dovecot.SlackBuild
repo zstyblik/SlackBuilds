@@ -25,7 +25,7 @@
 set -e
 set -u
 
-VERSION=${VERSION:-1.2.16}
+VERSION=${VERSION:-2.2.4}
 ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
@@ -74,7 +74,8 @@ fi # if [ -z "${MAKEFLAGS}" ]
 
 if [ ! -e "${SOURCES}/dovecot-${VERSION}.tar.gz" ]; then
 	TMP_MAJORV=$(printf "%s" "${VERSION}" | cut -d '.' -f 1-2)
-	wget "http://dovecot.org/releases/${TMP_MAJORV}/dovecot-${VERSION}.tar.gz"\
+	wget --no-check-certificate \
+		"http://dovecot.org/releases/${TMP_MAJORV}/dovecot-${VERSION}.tar.gz"\
 		-O "${SOURCES}/dovecot-${VERSION}.tar.gz"
 fi
 
