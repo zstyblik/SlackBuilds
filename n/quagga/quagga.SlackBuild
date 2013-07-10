@@ -72,7 +72,7 @@ rm -rf $PKG
 mkdir -p $TMP $PKG
 
 if [ ! -e "${SOURCES}/quagga-${VERSION}.tar.gz" ]; then
-	wget \
+	wget --no-check-certificate \
 	http://download.savannah.gnu.org/releases/quagga/quagga-${VERSION}.tar.gz\
 	-O "${SOURCES}/quagga-${VERSION}.tar.gz"
 fi
