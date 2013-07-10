@@ -42,7 +42,8 @@ TMP=${TMP:-/tmp}
 PKG="${TMP}/package-${APPL}"
 
 if [ "${VERSION}" = '0.0' ] || [ -z "${VERSION}" ]; then
-	VERSION=$(wget "${BUSYBOXSITE}/downloads/" -O - 2>/dev/null | \
+	VERSION=$(wget --no-check-certificate \
+		"${BUSYBOXSITE}/downloads/" -O - 2>/dev/null | \
 		awk -F'>' 'BEGIN { versionMax=""; arrVer[0] = 0 } \
 		{ if ($0 !~ /busybox-[0-9\.]+\.tar\.bz2/) { next } \
 		ibeg = index($0, ">busybox-"); \
@@ -67,7 +68,8 @@ else
 fi # if [ -e "busybox... ]
 
 if [ ! -e "busybox-${VERSION}.${TRSFX}" ]; then
-	wget "http://www.busybox.net/downloads/busybox-${VERSION}.${TRSFX}"
+	wget --no-check-certificate \
+		"http://www.busybox.net/downloads/busybox-${VERSION}.${TRSFX}"
 fi # if [ ! -e "busybox-${VERSION}.${TRSFX}" ]
 #
 LIBDIRSUFFIX=""
@@ -102,9 +104,11 @@ tar xvf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" || exit 1
 cd "${APPL}-${VERSION}"
 # Apply additional fixes/patches, if 1] told to do so 2] they exist
 if [ "${BUSYFIXES}" = 'y' ] \
-	&& wget "${BUSYBOXSITE}/downloads/fixes-${VERSION}/" \
+	&& wget --no-check-certificate \
+	"${BUSYBOXSITE}/downloads/fixes-${VERSION}/" \
 	-O /dev/null 2>/dev/null; then
-	for PATCH in $(wget "${BUSYBOXSITE}/downloads/fixes-${VERSION}/" \
+	for PATCH in $(wget --no-check-certificate \
+		"${BUSYBOXSITE}/downloads/fixes-${VERSION}/" \
 		-O - 2>/dev/null | awk -F'>' '{ \
 		if ($0 !~ /.patch/) { next } \
 		sPos=index($0, "href=\""); \
@@ -114,7 +118,8 @@ if [ "${BUSYFIXES}" = 'y' ] \
 		if (ePos == 0) { next }; \
 		strPatch = substr(strPatch, 0, ePos-1); \
 		print strPatch; }'); do
-		wget "${BUSYBOXSITE}/downloads/fixes-${VERSION}/${PATCH}" 2>/dev/null
+		wget --no-check-certificate \
+			"${BUSYBOXSITE}/downloads/fixes-${VERSION}/${PATCH}" 2>/dev/null
 		printf "Applying patch '%s'.\n" "${PATCH}"
 		cat "${PATCH}" | patch -p1
 	done # for PATCH
