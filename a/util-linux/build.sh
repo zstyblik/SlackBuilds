@@ -3,6 +3,7 @@ set -e
 set -u
 PKGNAME=util-linux
 PKGVER=2.19
+unset SOURCES
 
 if [ ! -d "./${SLACKVER}" ]; then
 	printf "%s sources not found in './%s'.\n" $PKGNAME $SLACKVER

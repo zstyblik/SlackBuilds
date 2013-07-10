@@ -19,20 +19,21 @@
 #  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+set -e
+set -u
 # Slackware build script for util-linux
 
 VERSION=${VERSION:-''}
 ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
-BUILD=${BUILD:-1}
+BUILD=${BUILD:-20}
 AUTHOR=""
 APPL="util-linux"
 TRSFX="tar.bz2"
 SLACKVER=${SLACKVER:-'slackware64-13.37'}
-SOURCES=${SOURCES:-"$(pwd)/${SLACKVER}"}
+SOURCES="$(pwd)/${SLACKVER}"
 
-ADJTIMEXVERS=1.23
+ADJTIMEXVERS=1.29
 SETSERIALVERS=2.17
 ZIPTOOLVERS=1.4.0
 
@@ -90,9 +91,9 @@ find . \
  \( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
  -exec chmod 644 {} \;
 #
-./autogen.sh
+
+#./autogen.sh
 # loop-AES patch
-bzcat $SOURCES/util-linux-2.19.1-20110510.diff.bz2 | patch -p1 || exit 1
 
 # Disabled login and init stuff from being built, as this is provided by 
 # shadow and sysvinit
@@ -109,8 +110,29 @@ bzcat $SOURCES/util-linux-2.19.1-20110510.diff.bz2 | patch -p1 || exit 1
 # Changing the fdisk -l output (this was done prior to util-linux-ng) broke
 # our installation scripts, so we have changed the name of partition type
 # 83 back to "Linux swap":
-zcat $SOURCES/util-linux.fdisk-no-solaris.diff.gz | patch -p1 || exit 1
+#zcat $SOURCES/util-linux.fdisk-no-solaris.diff.gz | patch -p1 --verbose || exit 1
 
+# Fix loop encryption ... which in turn breaks loop-AES. I don't care about
+# in-kernel crypto whatever.
+#zcat $SOURCES/0001-mount-old-fix-encryption-usage.patch.gz | \
+#	patch -p1 --verbose || exit 1
+
+# Fix fdisk granularity on 512 byte sector size devices:
+#zcat $SOURCES/0002-fdisk-don-t-ignore-1MiB-granularity-on-512-byte-sect.patch.gz | \
+#	patch -p1 --verbose || exit 1
+
+# 20120814 bkw: fix "column --separator <anything>" segfault
+#zcat $SOURCES/column-fix_long_opts.diff.gz | patch -p1 --verbose || exit 1
+
+#bzcat $SOURCES/util-linux-2.21.2-20120228.diff.bz2 | patch -p1 || exit 1
+#cat $SOURCES/util-linux-2.21.2-20120228.diff | patch -p1 || exit 1
+cat $SOURCES/util-linux-2.22-20120927.diff | patch -p1 || exit 1
+
+# Regenerate, since patch 0001 hits mount/Makefile.am:
+./autogen.sh
+
+#  --disable-init \
+#  --disable-login-utils \
 CFLAGS="$SLKCFLAGS" \
 ./configure \
   --prefix=/usr \
@@ -123,15 +145,15 @@ CFLAGS="$SLKCFLAGS" \
   --disable-static \
   --enable-arch \
   --enable-agetty \
-  --disable-init \
   --enable-kill \
   --disable-last \
+  --enable-line \
   --enable-mesg \
   --enable-partx \
   --enable-raw \
   --enable-rename \
   --enable-reset \
-  --disable-login-utils \
+  --disable-login \
   --enable-schedutils \
   --enable-wall \
   --enable-write \
@@ -140,6 +162,7 @@ CFLAGS="$SLKCFLAGS" \
   --enable-libmount \
   --enable-libuuid \
   --disable-uuidd \
+  --disable-su \
   --build=$ARCH-slackware-linux \
   || exit 1
 
@@ -204,12 +227,11 @@ cat strings.1 | gzip -9c > $PKG/usr/man/man1/strings.1.gz
 # Add just the hostname utilities from net-tools, so that anyone
 # installing just the A series will not have a hostname (null):
 cd $TMP || exit 1
-rm -rf net-tools-1.60
-tar xvf $SOURCES/net-tools-1.60.tar.xz
-cd net-tools-1.60
-zcat $SOURCES/net-tools_1.60-19.diff.gz | patch -p1 || exit
-zcat $SOURCES/net-tools.diff.gz | patch -p1 || exit
-make
+rm -rf net-tools-1.60.20120726git
+tar xvf $SOURCES/net-tools-1.60.20120726git.tar.xz
+cd net-tools-1.60.20120726git
+zcat $SOURCES/net-tools.config.h.gz > config.h
+#make
 make hostname
 strip hostname
 cat hostname > $PKG/bin/hostname
@@ -316,13 +338,13 @@ if [ -d $PKG/usr/man ]; then
 fi
 
 # Compress info page and remove dir file
-rm $PKG/usr/info/dir
-gzip -9 $PKG/usr/info/*
+rm -f $PKG/usr/info/dir
+gzip -9 $PKG/usr/info/* || true
 
 mkdir -p $PKG/usr/doc/util-linux-$VERSION
 cp -a AUTHORS COPYING DEPRECATED NEWS README* TODO \
   docs/v${VERSION}-ReleaseNotes \
-  $PKG/usr/doc/util-linux-$VERSION
+  $PKG/usr/doc/util-linux-$VERSION || true
 
 mkdir $PKG/install
 cat $SOURCES/slack-desc > $PKG/install/slack-desc
