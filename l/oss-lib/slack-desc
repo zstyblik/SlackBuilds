@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+       |-----handy-ruler------------------------------------------------------|
+oss-lib: oss-lib (Open Sound System libraries)
+oss-lib:
+oss-lib: The Open Sound System provides audio functionality to the Linux
+oss-lib: operating system. This is the library package which is used by audio 
+oss-lib: applications.
+oss-lib:
+oss-lib: For more information, see http://www.opensound.com/oss.html
+oss-lib:
+oss-lib:
+oss-lib:
+oss-lib:
