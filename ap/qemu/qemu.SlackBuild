@@ -25,7 +25,7 @@
 set -e
 set -u
 
-VERSION=${VERSION:-1.1.1}
+VERSION=${VERSION:-1.5.1}
 ARCH=${ARCH:-x86_64}
 NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
@@ -48,7 +48,8 @@ SLKLDFLAGS=${SLKLDFLAGS:-""}
 # perl -ne '/>(qemu-.*\.bz2)</; print $1."\n" if $1;'
 
 if [ ! -e "${SOURCES}/qemu-${VERSION}.${TRSFX}" ]; then
-	wget "http://wiki.qemu.org/download/qemu-${VERSION}.${TRSFX}"\
+	wget --no-check-certificate \
+		"http://wiki.qemu.org/download/qemu-${VERSION}.${TRSFX}"\
 		-O "${SOURCES}/qemu-${VERSION}.${TRSFX}"
 fi
 
@@ -67,8 +68,7 @@ MAKEFLAGS=${MAKEFLAGS:-''}
 APP_DIR="${APPL}-${VERSION}"
 if [ -z "${CONFIGUREFLAGS}" ]; then
 	CONFIGUREFLAGS="--prefix=/opt/${APP_DIR} \
-		--enable-vde \
-		--disable-vnc-thread"
+		--enable-vde --enable-sdl"
 fi # if [ -z "${CONFIGUREFLAGS}" ]
 if [ -z "${MAKEFLAGS}" ]; then
 	MAKEFLAGS=""
