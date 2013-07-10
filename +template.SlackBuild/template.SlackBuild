@@ -102,7 +102,7 @@ if [ -d $PKG/usr/man ]; then
 					ln -s $( readlink $eachpage ).gz $eachpage.gz
 					rm $eachpage
 				done
-				gzip -9 *.*
+				gzip -9 *.* || true
 			)
 		done
 	)
