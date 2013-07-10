@@ -15,16 +15,16 @@ found.\n" "${CWD}" "${KERNNAME}" "${KVERSION}"
 fi
 
 if [ ! -e "${SOURCES}/linux-${KVERSION}.tar.bz2" ]; then
-	KVERPART=$(printf "%s" "${KVERSION}" | cut -d '.' -f 1-2)
-	if [ -z "${KVERPART}" ] || ! printf "%s" "${KVERPART}" | grep -e '[0-9]\.[0-9]'; then
+	KVERPART=$(printf -- "%s" "${KVERSION}" | cut -d '.' -f 1-2)
+	if [ -z "${KVERPART}" ] || ! printf "%s" "${KVERPART}" | grep -q -e '[0-9]\.[0-9]'; then
 		printf "KVERSION '%s' is garbage. Expected X.Y.Z...\n" "${KVERSION}"
 		exit 1
 	fi # if [ -z "${VERPART}" ]
-	if printf "%s" "${KVERPART}" | grep -q -e '3\.[0-9]' ; then
+	if printf -- "%s" "${KVERPART}" | grep -q -e '3\.[0-9]' ; then
 		# Note: Let's see when this is going to break
 		KVERPART="3.0"
 	fi
-	wget \
+	wget --no-check-certificate \
 		"http://www.kernel.org/pub/linux/kernel/v${KVERPART}/linux-${KVERSION}.tar.bz2"\
 		-O "${SOURCES}/linux-${KVERSION}.tar.bz2"
 fi # if [ ! -e "linux-${KVERSION}.tar.bz2" ]
