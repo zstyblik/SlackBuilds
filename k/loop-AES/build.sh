@@ -5,6 +5,7 @@ set -u
 VERSION=${VERSION:-'v3.6c'}
 ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
+SOURCES=${SOURCES:-$(pwd)}
 BUILD=${BUILD:-1}
 AUTHOR=""
 APPL='loop-AES'
@@ -24,12 +25,18 @@ VAR_LINUX_SOURCE="/usr/src/linux-${KVERSION}"
 VAR_INSTALL_MOD_PATH="${TMP}/package-${APPL}"
 NUMJOBS=${NUMJOBS:-"-j7"}
 
+if [ ! -e "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" ]; then
+	wget --no-check-certificate \
+		"http://loop-aes.sourceforge.net/loop-AES/${APPL}-${VERSION}.${TRSFX}" \
+		-O  "${SOURCES}/${APPL}-${VERSION}.${TRSFX}"
+fi
+
 cd "${TMP}"
 
 rm -Rf "${VAR_INSTALL_MOD_PATH}"
 rm -Rf "${TMP}/${APPL}-${VERSION}"
 
-tar vjxf "${CWD}/${APPL}-${VERSION}.tar.bz2"
+tar vjxf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}"
 cd "${APPL}-${VERSION}"
 make clean || exit 1
 make INSTALL_MOD_PATH=${VAR_INSTALL_MOD_PATH} LINUX_SOURCE=${VAR_LINUX_SOURCE} \
@@ -50,5 +57,14 @@ EOD
 
 makepkg -l y -c n "${TMP}/${APPL}-${VERSION}-${KVERSION}${KERNNAME}-${ARCH}-${BUILD}.txz"
 
-md5sum "${TMP}/${APPL}-${VERSION}-${KVERSION}${KERNNAME}-${ARCH}-${BUILD}.txz" \
-	> "${TMP}/${APPL}-${VERSION}-${KVERSION}${KERNNAME}-${ARCH}-${BUILD}.md5"
+pushd "${TMP}"
+MD5SUM=$(md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" | \
+	cut -d ' ' -f 1)
+popd
+
+cat > "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.pkgdesc"<<HERE
+APPL ${APPL}
+VERSION ${VERSION}
+CHECKSUM MD5#${MD5SUM}
+HERE
+# EOF
