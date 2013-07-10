@@ -1,0 +1,147 @@
+#!/bin/sh
+
+# Copyright 2008, 2009  Patrick J. Volkerding, Sebeka, Minnesota, USA
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Modified 2010/Apr/14 @ Zdenek Styblik
+# Desc: Slackware's SlackBuild template
+set -e
+set -u
+
+VERSION=${VERSION:-7.4.0}
+ARCH=${ARCH:-$(uname -m)}
+NUMJOBS=${NUMJOBS:-" -j7 "}
+BUILD=${BUILD:-1}
+AUTHOR=""
+APPL="logwatch"
+TRSFX="tar.gz"
+SOURCES=${SOURCES:-$(pwd)}
+
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG="${TMP}/package-${APPL}"
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
+
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
+
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS=""
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
+rm -rf "${PKG}"
+mkdir "${TMP}" || true
+mkdir "${PKG}"
+
+cd "${TMP}"
+rm -rf "${APPL}-${VERSION}"
+tar xf "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" || exit 1
+cd "${APPL}-${VERSION}"
+
+chown -R root:root .
+find . \
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
+
+printf "Building ...\n"
+
+mkdir "${PKG}/etc/"
+mkdir "${PKG}/etc/logwatch"
+mkdir "${PKG}/etc/logwatch/scripts"
+mkdir "${PKG}/etc/logwatch/conf"
+mkdir "${PKG}/etc/logwatch/conf/logfiles"
+mkdir "${PKG}/etc/logwatch/conf/services"
+touch "${PKG}/etc/logwatch/conf/logwatch.conf.new"
+touch "${PKG}/etc/logwatch/conf/ignore.conf.new"
+touch "${PKG}/etc/logwatch/conf/override.conf.new"
+
+mkdir "${PKG}/usr"
+mkdir "${PKG}/usr/share"
+mkdir "${PKG}/usr/share/logwatch"
+mkdir "${PKG}/usr/share/logwatch/dist.conf"
+mkdir "${PKG}/usr/share/logwatch/dist.conf/logfiles"
+mkdir "${PKG}/usr/share/logwatch/dist.conf/services"
+
+mv conf/ "${PKG}/usr/share/logwatch/default.conf"
+mv scripts/ "${PKG}/usr/share/logwatch/scripts"
+mv lib/ "${PKG}/usr/share/logwatch/lib"
+
+find "${PKG}" | xargs file | grep -e "executable" -e "shared object" | \
+	grep -e "ELF" | cut -f 1 -d ':' | \
+	xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p "${PKG}/install"
+cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"
+if [ -e "${CWD}/doinst.sh" ]; then
+	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh"
+fi
+
+# Compress and link manpages, if any:
+if [ -d $PKG/usr/man ]; then
+	( cd $PKG/usr/man
+		for manpagedir in $(find . -type d -name "man*") ; do
+			( cd $manpagedir
+				for eachpage in $( find . -type l -maxdepth 1) ; do
+					ln -s $( readlink $eachpage ).gz $eachpage.gz
+					rm $eachpage
+				done
+				gzip -9 *.*
+			)
+		done
+	)
+fi # if [ -d $PKG/usr/man ]
+# Compress info pages
+if [ -d $PKG/usr/info ]; then
+	rm -rf $PKG/usr/info/dir
+	gzip -9 $PKG/usr/info/*
+fi # if [ -d $PKG/usr/info ]
+
+# Build the package:
+cd "${PKG}"
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
+
+pushd "${TMP}"
+MD5SUM=$(md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" | \
+	cut -d ' ' -f 1)
+popd
+
+cat > "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.pkgdesc"<<HERE
+APPL ${APPL}
+VERSION ${VERSION}
+CHECKSUM MD5#${MD5SUM}
+HERE
+# EOF
