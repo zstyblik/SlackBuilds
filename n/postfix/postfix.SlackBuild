@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -x
 # Copyright 2008, 2009  Patrick J. Volkerding, Sebeka, Minnesota, USA
 # All rights reserved.
 #
@@ -25,10 +25,10 @@
 set -e
 set -u
 
-VERSION=${VERSION:-2.6.10}
+VERSION=${VERSION:-2.9.7}
 ARCH=${ARCH:-$(uname -m)}
 NUMJOBS=${NUMJOBS:-" -j7 "}
-BUILD=${BUILD:-2}
+BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="postfix"
 TRSFX="tar.gz"
@@ -47,6 +47,7 @@ if [ "${ARCH}" = "i486" ]; then
 elif [ "${ARCH}" = "s390" ]; then
 	SLKCFLAGS="${SLKCFLAGS} -O2"
 elif [ "${ARCH}" = "x86_64" ]; then
+#	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
 	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
 	LIBDIRSUFFIX=64
 fi # if [ "${ARCH}" = "i486" ]
@@ -77,13 +78,19 @@ find . \
 	-exec chmod 644 {} \;
 
 printf "Building ...\n"
+AUXLIBS=${AUXLIBS:-''}
+CCARGS=${CCARGS:-"'-DDEF_MANPAGE_DIR=\\\"/usr/man/\\\"'"}
+
 LDFLAGS="$SLKLDFLAGS" \
-CFLAGS="$SLKCFLAGS" \
-make makefiles \
-CCARGS='-DDEF_MANPAGE_DIR=\"/usr/man/\" -DUSE_SASL_AUTH -DUSE_CYRUS_SASL \
--I/usr/include/sasl/ -DHAS_PGSQL -L/usr/include/ -DUSE_TLS -DHAS_LDAP' \
-AUXLIBS="-L/usr/lib${LIBDIRSUFFIX}/sasl2/ -lsasl2 -L/usr/lib${LIBDIRSUFFIX}/postgresql/ -lpq \
--lssl -lcrypto -lldap -llber" || exit 1
+	CFLAGS="$SLKCFLAGS" \
+	make makefiles \
+	CCARGS='-DDEF_MANPAGE_DIR=\"/usr/man/\"' \
+	AUXLIBS="${AUXLIBS}" || exit 1
+
+#CCARGS=${CCARGS:-"-DDEF_MANPAGE_DIR=\"/usr/man/\" -DUSE_SASL_AUTH -DUSE_CYRUS_SASL \
+#-I/usr/include/sasl/ -DHAS_PGSQL -L/usr/include/ -DUSE_TLS -DHAS_LDAP"} \
+#AUXLIBS=${AUXLIBS:-"-L/usr/lib${LIBDIRSUFFIX}/sasl2/ -lsasl2 \
+#-L/usr/lib${LIBDIRSUFFIX}/postgresql/ -lpq -lssl -lcrypto -lldap -llber"} || exit 1
 
 make non-interactive-package install_root=${PKG} || exit 2
 

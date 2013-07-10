@@ -1,11 +1,17 @@
 #!/bin/bash
 set -e
 set -u
-PKGNAME="postfix"
-VERSION="2.6.10"
+PKGNAME=${PKGNAME:-'postfix'}
+VERSION=${VERSION:-'2.9.7'}
 
 if [ -z ${DISTPKG} ] || [ -z ${SBDIR} ]; then
 	exit 254
+fi
+
+if [ ! -e "${SOURCES}/postfix-${VERSION}.tar.gz" ]; then
+	wget --no-check-certificate \
+		"http://de.postfix.org/ftpmirror/official/postfix-${VERSION}.tar.gz"\
+		-O "${SOURCES}/postfix-${VERSION}.tar.gz"
 fi
 
 #MAKEPOS=`( grep -e make -m 1 -n ${DISTPKG}/${PKGNAME}.SlackBuild || echo 0: ) | cut -d: -f1`
@@ -33,6 +39,7 @@ fi
 #cd ${DISTPKG}
 ./${PKGNAME}.SlackBuild || exit $?
 
-removepkg /var/log/packages/${PKGNAME}*
-installpkg /tmp/${PKGNAME}-${VERSION}*.txz
+#removepkg /var/log/packages/${PKGNAME}*
+#installpkg /tmp/${PKGNAME}-${VERSION}*.txz
 
+# EOF
