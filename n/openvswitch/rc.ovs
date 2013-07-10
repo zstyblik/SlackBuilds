@@ -1,0 +1,147 @@
+#!/bin/sh
+# 2013/May/25 @ Zdenek Styblik
+# Desc: RC script for openvswtich
+OVS_CTRL_SOCK="punix:/var/run/openvswitch/ovs-controller.sock"
+OVS_CTRL_PID="/var/run/openvswitch/ovs-controller.pid"
+OVS_DB_SOCK="punix:/var/run/openvswitch/db.sock"
+OVS_DB_PID="/var/run/openvswitch/ovsdb-server.pid"
+OVS_SWI_PID="/var/run/openvswitch/ovs-vswitchd.pid"
+
+start()
+{
+	local rc=0
+	printf "Starting OVS Controller ... "
+	if ovs-controller --detach --pidfile ${OVS_CTRL_SOCK} ; then
+		printf "ok\n"
+	else
+		printf "fail\n"
+		exit 1
+	fi
+	printf "Starting OVS DB ... "
+	if ovsdb-server --remote=${OVS_DB_SOCK} --pidfile --detach ; then
+		printf "ok\n"
+	else
+		printf "fail\n"
+		exit 1
+	fi
+	printf "Starting OVS vSwitchd ... "
+	if ovs-vswitchd --detach --pidfile ; then
+		printf "ok\n"
+	else
+		printf "fail\n"
+		rc=1
+	fi
+	return $rc
+}
+
+status()
+{
+	local rc=0
+	printf "OVS Controller running ... "
+	if [ ! -e "${OVS_CTRL_PID}" ]; then
+		printf "no\n"
+		rc=1
+	else
+		PID=$(cat -- "${OVS_CTRL_PID}" | grep -E -e '^[0-9]+$')
+		if ! ps "${PID}" 2>/dev/null | grep -q -e 'ovs-controller' ; then
+			rc=1
+			printf "no\n"
+		else
+			printf "yes\n"
+		fi
+	fi
+	printf "OVS DB running ... "
+	if [ ! -e "${OVS_DB_PID}" ]; then
+		printf "no\n"
+		rc=1
+	else
+		PID=$(cat -- "${OVS_DB_PID}" | grep -E -e '^[0-9]+$')
+		if ! ps "${PID}" 2>/dev/null | grep -q -e 'ovsdb-server' ; then
+			rc=1
+			printf "no\n"
+		else
+			printf "yes\n"
+		fi
+	fi
+	printf "OVS vSwitchd running ... "
+	if [ ! -e "${OVS_SWI_PID}" ]; then
+		printf "no\n"
+		rc=1
+	else
+		PID=$(cat -- "${OVS_SWI_PID}" | grep -E -e '^[0-9]+$')
+		if ! ps "${PID}" 2>/dev/null | grep -q -e 'ovs-vswitchd' ; then
+			rc=1
+			printf "no\n"
+		else
+			printf "yes\n"
+		fi
+	fi
+	return $rc
+}
+stop()
+{
+	local rc=0
+	printf "Stopping OVS vSwitchd ... "
+	if [ -e "${OVS_SWI_PID}" ]; then
+		PID=$(cat "${OVS_SWI_PID}" | grep -E -e '^[0-9]+$')
+		if ps "${PID}" 2>/dev/null | grep -q -e 'ovs-vswitchd' ; then
+			kill "${PID}"
+			printf "ok\n"
+		else
+			printf "fail\n"
+			rc=1
+		fi
+	else
+		printf "fail\n"
+		rc=1
+	fi
+	printf "Stopping OVS DB ... "
+	if [ -e "${OVS_DB_PID}" ]; then
+		PID=$(cat "${OVS_DB_PID}"| grep -E -e '^[0-9]+$')
+		if ps "${PID}" 2>/dev/null | grep -q -e 'ovsdb-server' ; then
+			kill "${PID}"
+			printf "ok\n"
+		else
+			printf "fail\n"
+			rc=1
+		fi
+	else
+		printf "fail\n"
+		rc=1
+	fi
+	printf "Stopping OVS Controller ... "
+	if [ -e "${OVS_CTRL_PID}" ]; then
+		PID=$(cat "${OVS_CTRL_PID}"| grep -E -e '^[0-9]+$')
+		if ps "${PID}" 2>/dev/null | grep -q -e 'ovs-controller' ; then
+			kill "${PID}"
+			printf "ok\n"
+		else
+			printf "fail\n"
+			rc=1
+		fi
+	else
+		printf "fail\n"
+		rc=1
+	fi
+	return $rc
+}
+
+ACTION="${1:-''}"
+
+case "${ACTION}" in
+	'start')
+		start
+		;;
+	'status')
+		status
+		;;
+	'stop')
+		stop
+		;;
+	*)
+		printf "usage: %s <start|stop|restart>\n" \
+			$(basename -- "${0}") 1>&2
+		exit 1
+		;;
+esac
+# EOF

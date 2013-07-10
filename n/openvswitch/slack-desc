@@ -1,0 +1,19 @@
+# HOW TO EDIT THIS FILE:
+# The "handy ruler" below makes it easier to edit a package description.  Line
+# up the first '|' above the ':' following the base package name, and the '|' on
+# the right side marks the last column you can put a character in.  You must make
+# exactly 11 lines for the formatting to be correct.  It's also customary to
+# leave one space after the ':'.
+
+           |-----handy-ruler------------------------------------------------------|
+openvswitch: Open vSwitch (Virtual Switch)
+openvswitch:
+openvswitch: Open vSwitch is a production quality, multilayer virtual switch
+openvswitch: licensed under the open source Apache 2.0 license. It is designed to
+openvswitch: enable massive network automation through programmatic extension,
+openvswitch: while still supporting standard management interfaces and protocols
+openvswitch: (e.g. NetFlow, sFlow, SPAN, RSPAN, CLI, LACP, 802.1ag). In addition,
+openvswitch: it is designed to support distribution across multiple physical
+openvswitch: servers similar to VMware's vNetwork distributed vswitch or Cisco's
+openvswitch: Nexus 1000V.
+openvswitch:
