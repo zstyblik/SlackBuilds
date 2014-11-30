@@ -2,7 +2,7 @@
 set -e
 set -u
 PKGNAME=util-linux
-PKGVER=2.19
+PKGVER=2.21.2
 unset SOURCES
 
 if [ ! -d "./${SLACKVER}" ]; then

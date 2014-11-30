@@ -122,11 +122,15 @@ find . \
 #	patch -p1 --verbose || exit 1
 
 # 20120814 bkw: fix "column --separator <anything>" segfault
-#zcat $SOURCES/column-fix_long_opts.diff.gz | patch -p1 --verbose || exit 1
+zcat $SOURCES/column-fix_long_opts.diff.gz | patch -p1 --verbose || exit 1
 
-#bzcat $SOURCES/util-linux-2.21.2-20120228.diff.bz2 | patch -p1 || exit 1
-#cat $SOURCES/util-linux-2.21.2-20120228.diff | patch -p1 || exit 1
-cat $SOURCES/util-linux-2.22-20120927.diff | patch -p1 || exit 1
+# loop-AES patch
+bzcat $SOURCES/util-linux-2.21-20120228.diff.bz2 | patch -p1 || true
+#bzcat $SOURCES/util-linux-2.22-20120927.diff.bz2 | patch -p1 || true
+
+# Fix data type in partx to prevent silently truncating partition sizes and
+# offsets to 4GB on 32-bit platforms:
+zcat $CWD/partx.data.type.diff.gz | patch -p1 --verbose || exit 1
 
 # Regenerate, since patch 0001 hits mount/Makefile.am:
 ./autogen.sh
@@ -363,4 +367,3 @@ APPL ${APPL}
 VERSION ${VERSION}
 CHECKSUM MD5#${MD5SUM}
 HERE
-# EOF
