@@ -31,7 +31,7 @@ NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="kernel-headers"
-TRSFX="tar.bz2"
+TRSFX="tar.xz"
 SOURCES=${SOURCES:-$(pwd)}
 
 KCONFIG=${KCONFIG:-''}
@@ -72,13 +72,13 @@ if [ ! -r ${KCONFIG} ]; then
 fi
 #
 if [ ! -d /usr/src/linux-${VERSION} ]; then
-        if [ ! -r "${SOURCES}/linux-${VERSION}.tar.bz2" ]; then
-		echo "File '${SOURCES}/linux-${VERSION}.tar.bz2' doesn't seem to exist." 1>&2
+        if [ ! -r "${SOURCES}/linux-${VERSION}.${TRSFX}" ]; then
+		echo "File '${SOURCES}/linux-${VERSION}.${TRSFX}' doesn't seem to exist." 1>&2
 		exit 22
 	fi
 	cd /usr/src/
 	printf "Extracting kernel sources...\n" 
-	tar xf "${SOURCES}/linux-${VERSION}.tar.bz2"
+	tar xf "${SOURCES}/linux-${VERSION}.${TRSFX}"
 else
 	cd /usr/src/linux-${VERSION}
 	make clean || true

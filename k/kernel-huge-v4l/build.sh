@@ -14,7 +14,7 @@ if [ ! -e $CWD/linux-${KERNNAME}-${KVERSION}.config ]; then
 fi
 
 cd /usr/src/
-tar vjxf $CWD/linux-${KVERSION}.tar.bz2 || exit 1
+tar vjxf $CWD/linux-${KVERSION}.tar.xz || exit 1
 cd linux-${KVERSION} || exit 2
 make clean
 cp $CWD/linux-${KERNNAME}-${KVERSION}.config .config || exit 3

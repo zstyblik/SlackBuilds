@@ -14,7 +14,7 @@ found.\n" "${CWD}" "${KERNNAME}" "${KVERSION}"
 	exit 1
 fi
 
-if [ ! -e "${SOURCES}/linux-${KVERSION}.tar.bz2" ]; then
+if [ ! -e "${SOURCES}/linux-${KVERSION}.tar.xz" ]; then
 	KVERPART=$(printf -- "%s" "${KVERSION}" | cut -d '.' -f 1-2)
 	if [ -z "${KVERPART}" ] || ! printf "%s" "${KVERPART}" | grep -q -e '[0-9]\.[0-9]'; then
 		printf "KVERSION '%s' is garbage. Expected X.Y.Z...\n" "${KVERSION}"
@@ -25,12 +25,12 @@ if [ ! -e "${SOURCES}/linux-${KVERSION}.tar.bz2" ]; then
 		KVERPART="3.0"
 	fi
 	wget --no-check-certificate \
-		"http://www.kernel.org/pub/linux/kernel/v${KVERPART}/linux-${KVERSION}.tar.bz2"\
-		-O "${SOURCES}/linux-${KVERSION}.tar.bz2"
-fi # if [ ! -e "linux-${KVERSION}.tar.bz2" ]
+		"http://www.kernel.org/pub/linux/kernel/v${KVERPART}/linux-${KVERSION}.tar.xz"\
+		-O "${SOURCES}/linux-${KVERSION}.tar.xz"
+fi # if [ ! -e "linux-${KVERSION}.tar.xz" ]
 
 cd /usr/src/
-tar vjxf $SOURCES/linux-${KVERSION}.tar.bz2 || exit 1
+tar xf $SOURCES/linux-${KVERSION}.tar.xz || exit 1
 cd linux-${KVERSION} || exit 2
 make clean
 cp $CWD/linux-${KERNNAME}-${KVERSION}.config .config || exit 3

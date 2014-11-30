@@ -31,7 +31,7 @@ NUMJOBS=${NUMJOBS:-" -j7 "}
 BUILD=${BUILD:-1}
 AUTHOR=""
 APPL="kernel-source"
-TRSFX="tar.bz2"
+TRSFX="tar.xz"
 SOURCES=${SOURCES:-$(pwd)}
 KSOURCE=${KSOURCE:-"${SOURCES}/linux-${VERSION}.${TRSFX}"}
 
