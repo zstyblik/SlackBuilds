@@ -28,7 +28,7 @@ TMP=${TMP:-/tmp}
 PKG=$TMP/package-kernel-firmware
 
 VERSION=${VERSION:-2.6.32.40}
-ARCH='noarch'
+ARCH=${ARCH:-x86_64}
 BUILD=${BUILD:-1}
 AUTHOR=${AUTHOR:-""}
 SOURCES=${SOURCES:-$(pwd)}
