@@ -1,0 +1,93 @@
+#!/bin/sh
+#!/bin/sh
+set -e
+set -u
+
+VERSION=${VERSION:-34.0.5}
+ARCH=${ARCH:-$(uname -m)}
+NUMJOBS=${NUMJOBS:-" -j7 "}
+BUILD=${BUILD:-1}
+AUTHOR="sty"
+APPL="mozilla-firefox"
+TRSFX="tar.bz2"
+SOURCES=${SOURCES:-$(pwd)}
+
+DL_URL="https://download.mozilla.org/?product=firefox-${VERSION}-SSL&os=linux64&lang=en-US"
+
+CWD=$(pwd)
+TMP=${TMP:-/tmp}
+PKG=$TMP/package-$APPL
+#
+LIBDIRSUFFIX=""
+SLKCFLAGS=${SLKCFLAGS:-""}
+SLKLDFLAGS=${SLKLDFLAGS:-""}
+
+if [ "${ARCH}" = "i486" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2 -march=i486 -mtune=i686"
+elif [ "${ARCH}" = "s390" ]; then
+	SLKCFLAGS="${SLKCFLAGS} -O2"
+elif [ "${ARCH}" = "x86_64" ]; then
+#	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	SLKCFLAGS="${SLKCFLAGS} -O2 -fPIC"
+	LIBDIRSUFFIX=64
+fi # if [ "${ARCH}" = "i486" ]
+#
+CONFIGUREFLAGS=${CONFIGUREFLAGS:-''}
+MAKEFLAGS=${MAKEFLAGS:-''}
+
+if [ -z "${CONFIGUREFLAGS}" ]; then
+	CONFIGUREFLAGS=""
+fi # if [ -z "${CONFIGUREFLAGS}" ]
+if [ -z "${MAKEFLAGS}" ]; then
+	MAKEFLAGS=""
+fi # if [ -z "${MAKEFLAGS}" ]
+#
+if [ ! -e "${SOURCES}/${APPL}-${VERSION}.${TRSFX}" ]; then
+	wget "${DL_URL}" -O "${SOURCES}/${APPL}-${VERSION}.${TRSFX}"
+fi
+
+rm -rf $PKG
+mkdir -p $TMP $PKG
+
+cd $PKG
+mkdir -p usr
+mkdir -p usr/bin
+mkdir -p usr/lib${LIBDIRSUFFIX}
+rm -rf firefox
+tar xvf $SOURCES/$APPL-$VERSION.$TRSFX || exit 1
+mv firefox usr/lib${LIBDIRSUFFIX}/firefox-$VERSION
+
+chown -R root:root .
+find . \
+	\( -perm 777 -o -perm 775 -o -perm 711 -o -perm 555 -o -perm 511 \) \
+	-exec chmod 755 {} \; -o \
+	\( -perm 666 -o -perm 664 -o -perm 600 -o -perm 444 -o -perm 440 -o -perm 400 \) \
+	-exec chmod 644 {} \;
+
+find "${PKG}" | xargs file | grep -e "executable" -e "shared object" | \
+	grep -e "ELF" | cut -f 1 -d ':' | \
+	xargs strip --strip-unneeded 2> /dev/null || true
+
+mkdir -p "${PKG}/install"
+cat "${CWD}/slack-desc" > "${PKG}/install/slack-desc"
+if [ -e "${CWD}/doinst.sh" ]; then
+	cat "${CWD}/doinst.sh" > "${PKG}/install/doinst.sh"
+	printf "( cd usr/bin ; ln -sf /usr/lib64/firefox-%s/firefox firefox )\n" \
+		"${VERSION}" >> "${PKG}/install/doinst.sh"
+fi
+
+# Build the package:
+cd "${PKG}"
+makepkg -c n -l y "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz"
+
+pushd "${TMP}"
+MD5SUM=$(md5sum "${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.txz" | \
+	cut -d ' ' -f 1)
+popd
+
+cat > "${TMP}/${APPL}-${VERSION}-${ARCH}-${BUILD}${AUTHOR}.pkgdesc"<<HERE
+APPL ${APPL}
+VERSION ${VERSION}
+CHECKSUM MD5#${MD5SUM}
+HERE
+# EOF
